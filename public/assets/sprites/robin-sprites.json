@@ -1,0 +1,16 @@
+{
+  "frames": {
+    "robin_down_idle": { "frame": { "x": 18, "y": 1, "w": 14, "h": 20 } },
+    "robin_down_walk1": { "frame": { "x": 1, "y": 2, "w": 14, "h": 19 } },
+    "robin_down_walk2": { "frame": { "x": 35, "y": 2, "w": 14, "h": 19 } },
+    "robin_up_idle": { "frame": { "x": 18, "y": 33, "w": 14, "h": 21 } },
+    "robin_up_walk1": { "frame": { "x": 1, "y": 35, "w": 14, "h": 19 } },
+    "robin_up_walk2": { "frame": { "x": 35, "y": 35, "w": 14, "h": 19 } },
+    "robin_left_idle": { "frame": { "x": 18, "y": 66, "w": 15, "h": 20 } },
+    "robin_left_walk1": { "frame": { "x": 1, "y": 68, "w": 15, "h": 18 } },
+    "robin_left_walk2": { "frame": { "x": 35, "y": 68, "w": 15, "h": 19 } },
+    "robin_right_idle": { "frame": { "x": 17, "y": 99, "w": 15, "h": 20 } },
+    "robin_right_walk1": { "frame": { "x": 0, "y": 100, "w": 15, "h": 19 } },
+    "robin_right_walk2": { "frame": { "x": 34, "y": 100, "w": 15, "h": 19 } }
+  }
+}

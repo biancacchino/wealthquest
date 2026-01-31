@@ -200,16 +200,29 @@ export const Overworld: React.FC<OverworldProps> = ({
     };
   }, [activeEncounter, money.balance, money.weeklyAllowance, money.goal.cost]);
 
-  return (
-    <div className="flex flex-col min-h-screen bg-[#0b0f19] text-white relative overflow-hidden">
-      <div className="flex-1 flex flex-col lg:flex-row items-center justify-center gap-8 p-6 z-10">
-        <PhaserGame
-          onEncounter={handleEncounter}
-          onReady={(game: Phaser.Game) => {
-            gameRef.current = game;
-          }}
-        />
-      </div>
+    const preview = useMemo(() => {
+        if (!activeEncounter) return null;
+        const buyBalance = Math.max(0, money.balance - activeEncounter.cost);
+        const skipBalance = money.balance;
+        return {
+            buyETA: calculateGoalETAWeeks(buyBalance, money.weeklyAllowance, money.goal.cost),
+            skipETA: calculateGoalETAWeeks(skipBalance, money.weeklyAllowance, money.goal.cost),
+            buyBalance,
+            skipBalance
+        };
+    }, [activeEncounter, money.balance, money.weeklyAllowance, money.goal.cost]);
+
+    return (
+        <div className="flex flex-col min-h-screen bg-[#0b0f19] text-white relative overflow-hidden">
+            <div className="flex-1 flex flex-col lg:flex-row items-center justify-center gap-8 p-6 z-10">
+                <PhaserGame
+                    onEncounter={handleEncounter}
+                    onReady={(game: Phaser.Game) => {
+                        gameRef.current = game;
+                    }}
+                    characterId={user.characterId}
+                />
+            </div>
 
       {activeEncounter && (
         <div className="absolute inset-0 z-20 bg-black/70 flex items-center justify-center p-4">

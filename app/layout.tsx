@@ -16,6 +16,13 @@ export default function RootLayout({
       <head>
          <script src="https://cdn.tailwindcss.com"></script>
          <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+         <script dangerouslySetInnerHTML={{ __html: `
+           window.addEventListener('keydown', function(e) {
+             if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
+               e.preventDefault();
+             }
+           }, { passive: false });
+         `}} />
       </head>
       <body>
         <main>{children}</main>

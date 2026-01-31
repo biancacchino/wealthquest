@@ -24,8 +24,20 @@ export class World extends Phaser.Scene {
     // Load the background map image
     this.load.image('map_background', '/assets/maps/GameMap.png');
     
-    // Load assets here when you have them
-    // this.load.spritesheet('player', '/assets/sprites/player.png', { frameWidth: 32, frameHeight: 32 });
+    // Load character atlas (small sprite sheet + JSON) for gameplay
+    const characterId = this.game.registry.get('characterId');
+    
+    if (characterId === 'green_cap') {
+      this.load.atlas('player', '/assets/sprites/alex-spritesheet.png', '/assets/sprites/alex-sprites.json');
+      this.game.registry.set('spritePrefix', 'alex');
+    } else if (characterId === 'black_cap') {
+      this.load.atlas('player', '/assets/sprites/robin-spritesheet.png', '/assets/sprites/robin-sprites.json');
+      this.game.registry.set('spritePrefix', 'robin');
+    } else {
+      // Fallback to Alex if no character selected
+      this.load.atlas('player', '/assets/sprites/alex-spritesheet.png', '/assets/sprites/alex-sprites.json');
+      this.game.registry.set('spritePrefix', 'alex');
+    }
   }
 
   create() {
@@ -96,11 +108,8 @@ export class World extends Phaser.Scene {
     this.cameras.main.startFollow(this.player.sprite, true, 0.1, 0.1);
 
 
-    // Add keyboard controls - Arrow keys
-    this.cursors = this.input.keyboard.createCursorKeys();
-    
-    // Add WASD keys
-    this.wasd = this.input.keyboard.addKeys({
+    // Add WASD keys for movement
+    this.keys = this.input.keyboard.addKeys({
       up: Phaser.Input.Keyboard.KeyCodes.W,
       down: Phaser.Input.Keyboard.KeyCodes.S,
       left: Phaser.Input.Keyboard.KeyCodes.A,
@@ -112,7 +121,7 @@ export class World extends Phaser.Scene {
     this.moveSpeed = 200; 
 
     // Add UI text (fixed to camera)
-    this.add.text(10, 10, 'Use arrow keys to move', {
+    this.add.text(10, 10, 'Use WASD to move', {
       fontSize: '16px',
       fill: '#fff'
     }).setScrollFactor(0); // Fixed to camera
@@ -339,25 +348,26 @@ export class World extends Phaser.Scene {
     let dy = 0;
     
     // Check arrow keys OR WASD for movement
-    if (this.cursors.left.isDown || this.wasd.left.isDown) {
-      dx = -1;
-    } else if (this.cursors.right.isDown || this.wasd.right.isDown) {
-      dx = 1;
-    }
+    const leftPressed = this.keys.left.isDown;
+    const rightPressed = this.keys.right.isDown;
+    const upPressed = this.keys.up.isDown;
+    const downPressed = this.keys.down.isDown;
     
-    if (this.cursors.up.isDown || this.wasd.up.isDown) {
-      dy = -1;
-    } else if (this.cursors.down.isDown || this.wasd.down.isDown) {
-      dy = 1;
-    }
+    if (leftPressed) dx = -1;
+    else if (rightPressed) dx = 1;
+    
+    if (upPressed) dy = -1;
+    else if (downPressed) dy = 1;
     
     // Apply movement if any direction is pressed
     if (dx !== 0 || dy !== 0) {
       // Normalize diagonal movement
+      let moveX = dx;
+      let moveY = dy; // Slow down vertical movement
       if (dx !== 0 && dy !== 0) {
         const factor = 0.707; // 1/sqrt(2)
-        dx *= factor;
-        dy *= factor;
+        moveX *= factor;
+        moveY *= factor;
       }
 
       // Use Physics velocity instead of manual position update

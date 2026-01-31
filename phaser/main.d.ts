@@ -1,4 +1,9 @@
+interface GameConfig {
+  onEncounter: (encounterId: string) => void;
+  characterId?: string | null;
+}
+
 export function createGame(
   container: HTMLElement,
-  options: { onEncounter: (encounterId: string) => void }
+  options: GameConfig
 ): Phaser.Game;
