@@ -17,12 +17,43 @@ export interface Monster {
   sprite: string;
 }
 
+export type MoneyGoalId = 'headphones' | 'game' | 'outfit';
+
+export interface MoneyGoal {
+  id: MoneyGoalId;
+  label: string;
+  cost: number;
+}
+
+export interface ChoiceEvent {
+  id: string;
+  dayIndex: number;
+  encounterId: string;
+  choice: 'buy' | 'skip';
+  cost: number;
+  reflection?: 'yes' | 'unsure' | 'no';
+  deltas: {
+    balanceAfter: number;
+    goalETAWeeks: number;
+    notes: string[];
+  };
+}
+
+export interface MoneyState {
+  weeklyAllowance: number;
+  balance: number;
+  goal: MoneyGoal;
+  dayIndex: number;
+  history: ChoiceEvent[];
+}
+
 export interface GameState {
   level: number;
   location: string;
   inventory: string[];
   party: Monster[];
   lastSaved: string;
+  money: MoneyState;
 }
 
 export interface UserProfile {

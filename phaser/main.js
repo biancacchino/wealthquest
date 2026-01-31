@@ -1,21 +1,26 @@
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 import { World } from './scenes/World';
 
-export function createGame(containerId) {
+export function createGame(parent, callbacks = {}) {
   const config = {
     type: Phaser.AUTO,
-    width: 600,
-    height: 400,
-    parent: containerId,
+    width: 640,
+    height: 480,
+    parent,
     backgroundColor: '#1a1a1a',
-    pixelArt: true, // Crucial for pixel-perfect scaling
-    roundPixels: true, // Prevents sub-pixel blurring
+    pixelArt: true,
+    roundPixels: true,
     scene: [World],
     physics: {
       default: 'arcade',
       arcade: {
         gravity: { y: 0 },
         debug: false
+      }
+    },
+    callbacks: {
+      postBoot: (game) => {
+        game.registry.set('callbacks', callbacks);
       }
     }
   };

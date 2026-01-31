@@ -1,4 +1,4 @@
-import { UserProfile, GameState } from '../types';
+import { UserProfile, GameState, MoneyGoal, MoneyState } from '../types';
 import { SAVE_PREFIX } from '../constants';
 
 const SESSION_KEY = 'ellehacks26_session';
@@ -8,7 +8,22 @@ export const createInitialGameState = (): GameState => ({
   location: 'PALLET TOWN',
   inventory: ['POTION'],
   party: [],
-  lastSaved: new Date().toISOString()
+  lastSaved: new Date().toISOString(),
+  money: createInitialMoneyState()
+});
+
+const createInitialMoneyState = (): MoneyState => ({
+  weeklyAllowance: 20,
+  balance: 20,
+  goal: getDefaultGoal(),
+  dayIndex: 0,
+  history: []
+});
+
+const getDefaultGoal = (): MoneyGoal => ({
+  id: 'headphones',
+  label: 'Headphones',
+  cost: 60
 });
 
 export const saveUser = (user: UserProfile) => {
