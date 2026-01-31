@@ -1,13 +1,28 @@
 export class Player {
   constructor(scene, x, y) {
     this.scene = scene;
-    this.direction = 'down'; // Track current direction
+    // Create a physics sprite instead of a simple rectangle
+    // Using a blank texture or create one if needed, assuming we want a simple box for now
+    // If 'player' texture exists, use it, otherwise use a colored rectangle texture
+    if (scene.textures.exists('player')) {
+        this.sprite = scene.physics.add.sprite(x, y, 'player');
+    } else {
+        // Fallback: create a placeholder texture
+        if (!scene.textures.exists('player_placeholder')) {
+            const graphics = scene.make.graphics().fillStyle(0x00ff00).fillRect(0, 0, 32, 32);
+            graphics.generateTexture('player_placeholder', 32, 32);
+            graphics.destroy();
+        }
+        this.sprite = scene.physics.add.sprite(x, y, 'player_placeholder');
+    }
     
-    // Get the sprite prefix (alex or robin) from registry
-    this.spritePrefix = scene.game.registry.get('spritePrefix') || 'alex';
-    
-    // Create sprite from the loaded atlas
-    this.sprite = scene.add.sprite(x, y, 'player', `${this.spritePrefix}_down_idle`);
+    // --- HITBOX TUNING ---
+    // Make the collision box smaller than the sprite (e.g. 16x16 instead of 32x32)
+    // This makes it less likely to get stuck on corners or accidentally trigger doors
+    this.sprite.body.setSize(20, 20); 
+    this.sprite.body.setOffset(6, 12); // Center it towards the bottom (feet)
+
+    this.sprite.setCollideWorldBounds(true);
     this.sprite.setDepth(10);
     this.sprite.setScale(2); // Scale up the small ~15x20 pixel sprites (2x sprite * 2x camera = 4x total)
     this.sprite.setOrigin(0.5, 0.5); // Center the sprite origin
@@ -67,6 +82,11 @@ export class Player {
     if (this.sprite.anims.currentAnim?.key !== animKey) {
       this.sprite.play(animKey, true);
     }
+  }
+
+  // physics body doesn't need manual update but we can expose methods to set velocity
+  setVelocity(x, y) {
+    this.sprite.setVelocity(x, y);
   }
 
   moveTo(x, y) {

@@ -22,7 +22,7 @@ export class World extends Phaser.Scene {
 
   preload() {
     // Load the background map image
-    this.load.image('map_background', '/assets/sprites/map_background.png');
+    this.load.image('map_background', '/assets/maps/GameMap.png');
     
     // Load character atlas (small sprite sheet + JSON) for gameplay
     const characterId = this.game.registry.get('characterId');
@@ -54,6 +54,13 @@ export class World extends Phaser.Scene {
     // Set world bounds for physics and camera
     this.physics.world.setBounds(0, 0, this.mapWidthPx, this.mapHeightPx);
 
+    // --- SETUP GROUPS ---
+    this.buildings = this.physics.add.staticGroup();
+    this.doors = this.physics.add.staticGroup(); // Triggers
+    
+    // --- CREATE COLLISION ZONES ---
+    this.createCollisionZones();
+
     // Create player at starting position
     const startPos = this.gameState.playerPosition;
     this.player = new Player(
@@ -62,7 +69,16 @@ export class World extends Phaser.Scene {
       startPos.y * tileSize + tileSize / 2
     );
 
-    // Encounter markers
+    // --- ADD COLLISIONS ---
+    // Player hits buildings -> Stop
+    this.physics.add.collider(this.player.sprite, this.buildings);
+
+    // Player touches door -> Trigger
+    this.physics.add.overlap(this.player.sprite, this.doors, (player, door) => {
+        this.handleDoorTrigger(door.name);
+    });
+
+    // Encounter markers (Visual only now, or could convert to triggers too)
     this.encounterMarkers = ENCOUNTERS.map((encounter) => {
       const marker = this.add.rectangle(
         encounter.tile.x * tileSize + tileSize / 2,
@@ -73,6 +89,8 @@ export class World extends Phaser.Scene {
         0.6
       );
       marker.setStrokeStyle(2, 0x14532d, 0.8);
+      // Optional: Add physics to encounters if you want them to be triggers too
+      // this.physics.add.existing(marker, true);
       return { id: encounter.id, marker };
     });
 
@@ -80,11 +98,11 @@ export class World extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, this.mapWidthPx, this.mapHeightPx);
     
     // Zoom in for better view of the big map (2x zoom)
-    this.cameras.main.setZoom(2);
+    this.cameras.main.setZoom(0.37);
     
     // Start camera at top-left corner (0, 0)
-    this.cameras.main.scrollX = 0;
-    this.cameras.main.scrollY = 0;
+    // this.cameras.main.scrollX = 0; // Let follow handle it
+    // this.cameras.main.scrollY = 0;
     
     // Camera follow with slight smoothing (0.1)
     this.cameras.main.startFollow(this.player.sprite, true, 0.1, 0.1);
@@ -98,8 +116,9 @@ export class World extends Phaser.Scene {
       right: Phaser.Input.Keyboard.KeyCodes.D
     });
     
-    // Movement speed (pixels per frame)
-    this.moveSpeed = 2;
+    // Movement speed (pixels per frame -> velocity)
+    // used to be 4 per frame, for physics velocity we need higher values (e.g. 150-200)
+    this.moveSpeed = 200; 
 
     // Add UI text (fixed to camera)
     this.add.text(10, 10, 'Use WASD to move', {
@@ -114,8 +133,213 @@ export class World extends Phaser.Scene {
     }).setScrollFactor(0);
   }
 
+  // --- NEW HELPER METHODS ---
+
+  createCollisionZones() {
+    // Helper to create invisible solid box
+    // Added 'color' parameter (defaults to Red 0xff0000 if not provided)
+    const createBuilding = (x, y, w, h, name, color = 0xff0000) => {
+        // x, y are center coordinates by default in Phaser arcade physics
+        // But for exact placement it's easier to think in top-left
+        // DEBUGGING: Set alpha to 0.5 to see the box. Set to 0 to hide it.
+        const zone = this.add.rectangle(x + w/2, y + h/2, w, h, color, 0.5); 
+        this.buildings.add(zone); // Add to static group
+        zone.name = name;
+        // Adjust body size if needed (padding)
+        // zone.body.setSize(w + 2, h + 2); 
+    };
+
+    // Helper to create door trigger
+    const createDoor = (x, y, w, h, name, color = 0x00ff00) => {
+        // DEBUGGING: Set alpha to 0.5 to see the box. Set to 0 to hide it.
+        const zone = this.add.rectangle(x + w/2, y + h/2, w, h, color, 0.5); 
+        this.doors.add(zone);
+        zone.name = name;
+    };
+
+    // ---------------------------------------------------------
+    // DEFINE YOUR ZONES HERE
+    // Use the coordinates from Tiled or guess & check
+    // ---------------------------------------------------------
+
+    // 1. market STORE (Top Left)
+    // Matches encounter at 2,2 (pixels ~64,64)
+    createBuilding(390, 415, 300, 170, 'COLL_CORNER_STORE'); 
+
+    createDoor(570, 530, 40, 60, 'DOOR_WORK');
+
+
+    // 2. arcade (Top Middle)
+    // Matches encounter at 9,2 (pixels ~288,64)
+    createBuilding(400, 690, 250, 140, 'COLL_ARCADE');
+
+    createDoor(540, 780, 40, 60, 'DOOR_WORK');
+
+
+    // 3. mall (Top Right - big building)
+    // Format: (X, Y, Width, Height)
+    // X = Left/Right position
+    // Y = Up/Down position (Increase this to move LOWER)
+    createBuilding(830, 420, 500, 310, 'COLL_APARTMENT');
+
+    createDoor(1025, 680, 40, 60, 'DOOR_WORK');
+
+
+      // 6. movie
+    createBuilding(1300, 450, 100, 280, 'COLL_WORK');
+
+       createDoor(1280, 680, 40, 60, 'DOOR_WORK');
+
+
+    // 4. bank  (Center area)
+    createBuilding(190, 680, 230, 100, 'COLL_COFFEE');
+
+    createDoor(300, 730, 40, 60, 'DOOR_WORK');
+
+
+    // 5. coffee (Bottom Left - very big)
+    createBuilding(176, 415, 250, 180, 'COLL_MALL_MAIN');
+
+    // 6. work / library + bit of a wall st(Bottom Right)
+    createBuilding(647, 163, 670, 160, 'COLL_WORK');
+
+    createDoor(1100, 280, 40, 60, 'DOOR_WORK');
+
+    createDoor(870, 275, 40, 60, 'DOOR_WORK');
+
+    createDoor(775, 280, 40, 60, 'DOOR_WORK');
+
+
+    
+    // 7. BUS STOPS (Yellow Zones)
+    // BUS STOP 1: (Main Road)
+    createBuilding(350, 243, 10, 85, 'COLL_BUSSTOP_POLE', 0xffff00); // Yellow Pole
+    createDoor(330, 243, 40, 85, 'DOOR_BUSSTOP', 0xffff00); // Yellow Trigger Zone
+
+    // BUS STOP 2: (Community Area)
+    createBuilding(100, 245, 10, 85, 'COLL_BUSSTOP_POLE', 0xffff00); 
+    createDoor(120, 245, 40, 85, 'DOOR_BUSSTOP', 0xffff00);
+
+
+        // Apartment
+    createBuilding(210, 5, 280, 200, 'COLL_WORK');
+
+       createDoor(300, 148, 40, 60, 'DOOR_WORK');
+
+        //  left pizza
+    createBuilding(1300, 190, 40, 170, 'COLL_WORK');
+
+  //  right pizza - NOW BLUE (0x0000ff)
+    createBuilding(1260, 225, 170, 120, 'COLL_WORK', 0x0000ff);
+
+     createDoor(1340, 310, 40, 60, 'DOOR_WORK');
+
+
+        //  top grass - NOW BLUE (0x0000ff)
+    createBuilding(0, 0, 10000, 75, 'COLL_WORK', 0x0000ff);
+
+        //  right grass - NOW BLUE (0x0000ff)
+    createBuilding(1500, 0, 80, 370, 'COLL_WORK', 0x0000ff);
+
+      //  small near pizza block  1- NOW BLUE (0x0000ff)
+    createBuilding(1435, 330, 55, 20, 'COLL_WORK');
+
+      //  left grass  1- NOW BLUE (0x0000ff)
+    createBuilding(0, 0, 70, 360, 'COLL_WORK', 0x0000ff);
+
+      //  left grass thin - NOW BLUE (0x0000ff)
+    createBuilding(0, 0, 20, 900, 'COLL_WORK');
+
+      //  left grass bottom  1- NOW BLUE (0x0000ff)
+    createBuilding(0, 680, 80, 240, 'COLL_WORK', 0x0000ff);
+
+    //  left grass bottom smaller 1- NOW BLUE (0x0000ff)
+    createBuilding(90, 860, 140, 30, 'COLL_WORK');
+    
+
+
+    
+    console.log("Collision zones created");
+  }
+
+  handleDoorTrigger(doorName) {
+      const now = this.time.now;
+      if (this.lastTriggerTime && now - this.lastTriggerTime < 1000) {
+          return;
+      }
+      this.lastTriggerTime = now;
+
+      // Prevent spamming the trigger (debounce could go here)
+      console.log("Player hit door:", doorName);
+
+      // Store the last door name so we know where to bounce back from
+      this.lastDoorHit = doorName;
+      
+      // Store exact player position when they hit the door
+      this.savedPlayerPos = {
+          x: this.player.sprite.x,
+          y: this.player.sprite.y
+      };
+
+      // IMPORTANT: Emit an event so execution jumps back to React
+      // This allows showing the UI!
+      const callbacks = this.registry.get('callbacks');
+      if (callbacks && callbacks.onEncounter) {
+          // You need to map DOOR_NAMES to encounter IDs or handle this string in React
+          // For now, let's just pass the door name as the ID
+          callbacks.onEncounter(doorName);
+      }
+      
+      // Example routing (internal game logic if needed)
+      switch(doorName) {
+          case 'DOOR_CORNER_STORE':
+              // Access corner store UI
+              break;
+          case 'DOOR_ARCADE':
+              // Start arcade mini-game
+              break;
+          case 'DOOR_APARTMENT':
+              // Go home / sleep
+              break;
+          case 'DOOR_MALL':
+              // Open shopping menu
+              break;
+          default:
+              break;
+      }
+  }
+
+  // Push player out of the door zone slightly
+  pushPlayerBack() {
+      if (!this.player || !this.player.sprite) return;
+      
+      console.log("Restoring player position...", this.savedPlayerPos);
+
+      // RESTORE: If we have a saved position, put them back exactly there first
+      if (this.savedPlayerPos) {
+          // Use body.reset to properly teleport physics body and kill velocity
+          this.player.sprite.body.reset(
+              this.savedPlayerPos.x, 
+              this.savedPlayerPos.y + 20 // Apply nudge directly here
+          );
+      } else {
+          // Fallback if no saved pos (rare)
+          this.player.sprite.y += 30;
+          this.player.sprite.body.setVelocity(0, 0);
+      }
+      
+      // Reset trigger timer to allow re-entry
+      this.lastTriggerTime = 0;
+  }
+
+
   update() {
-    if (this.isMovementLocked) return;
+    if (this.isMovementLocked) {
+        if (this.player && this.player.sprite && this.player.sprite.body) {
+             this.player.setVelocity(0, 0);
+        }
+        return;
+    }
 
     const { tileSize } = World.MAP_CONFIG;
     
@@ -145,59 +369,35 @@ export class World extends Phaser.Scene {
         moveX *= factor;
         moveY *= factor;
       }
-      
-      // Calculate new position
-      const newX = this.player.sprite.x + moveX * this.moveSpeed;
-      const newY = this.player.sprite.y + moveY * this.moveSpeed;
-      
-      // Bounds checking - keep player within world
-      const halfTile = tileSize / 2;
-      const clampedX = Phaser.Math.Clamp(newX, halfTile, this.mapWidthPx - halfTile);
-      const clampedY = Phaser.Math.Clamp(newY, halfTile, this.mapHeightPx - halfTile);
-      
-      // Move the player FIRST
-      this.player.sprite.x = clampedX;
-      this.player.sprite.y = clampedY;
+
+      // Use Physics velocity instead of manual position update
+      this.player.setVelocity(dx * this.moveSpeed, dy * this.moveSpeed);
       
       // Update game state with tile position
-      const tileX = Math.floor(clampedX / tileSize);
-      const tileY = Math.floor(clampedY / tileSize);
+      const tileX = Math.floor(this.player.sprite.x / tileSize);
+      const tileY = Math.floor(this.player.sprite.y / tileSize);
       this.gameState.updatePlayerPosition(tileX, tileY);
       
       // Check for encounters at current tile
       this.checkEncounterAt(tileX, tileY);
-      
-      // Determine direction for animation (prioritize vertical for up/down visibility)
-      let direction;
-      if (dy < 0) direction = 'up';
-      else if (dy > 0) direction = 'down';
-      else if (dx < 0) direction = 'left';
-      else if (dx > 0) direction = 'right';
-      
-      // Play walk animation AFTER movement (so errors don't block movement)
-      try {
-        this.player.playWalkAnimation(direction);
-      } catch (e) {
-        console.error('Animation error:', e);
-      }
     } else {
-      // No movement - play idle animation
-      try {
-        this.player.playIdleAnimation();
-      } catch (e) {
-        console.error('Idle animation error:', e);
-      }
+        // Stop moving
+        this.player.setVelocity(0, 0);
     }
   }
 
   movePlayer(dx, dy) {
-    const { tileSize, mapWidth, mapHeight } = World.MAP_CONFIG;
+    const { tileSize } = World.MAP_CONFIG;
     const currentPos = this.gameState.playerPosition;
     const newX = currentPos.x + dx;
     const newY = currentPos.y + dy;
 
+    // Calculate map dimensions in tiles
+    const mapWidthTiles = Math.floor(this.mapWidthPx / tileSize);
+    const mapHeightTiles = Math.floor(this.mapHeightPx / tileSize);
+
     // Bounds checking for the large map
-    if (newX >= 0 && newX < mapWidth && newY >= 0 && newY < mapHeight) {
+    if (newX >= 0 && newX < mapWidthTiles && newY >= 0 && newY < mapHeightTiles) {
       this.gameState.updatePlayerPosition(newX, newY);
       this.player.moveTo(
         newX * tileSize + tileSize / 2,
