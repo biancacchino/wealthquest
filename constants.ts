@@ -4,16 +4,16 @@ export const CHARACTERS: Record<CharacterId, { name: string; color: string; spri
   green_cap: { 
     name: 'Alex', 
     color: '#22c55e', 
-    spriteSheet: '/assets/sprites/prf.png',
+    spriteSheet: '/assets/sprites/RegularPoseBoy.png',
     cols: 4,
-    rows: 2
+    rows: 4
   },
   black_cap: { 
     name: 'Robin', 
     color: '#f97316', 
-    spriteSheet: '/assets/sprites/prf.png',
+    spriteSheet: '/assets/sprites/RegularPoseGirl.png',
     cols: 4,
-    rows: 2
+    rows: 4
   },
 };
 

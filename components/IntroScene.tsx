@@ -36,7 +36,7 @@ export const IntroScene: React.FC<IntroSceneProps> = ({ username, onFinished }) 
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-white text-black font-mono relative">
+    <div className="flex flex-col items-center justify-end pb-20 min-h-screen bg-white text-black font-mono relative">
        {/* Background pattern: Tiny repeating dots, VERY low opacity */}
        <div 
          className="absolute inset-0 pointer-events-none opacity-5" 
@@ -46,26 +46,29 @@ export const IntroScene: React.FC<IntroSceneProps> = ({ username, onFinished }) 
          }}
        />
        
-       {/* Character Window (top panel) - Plain, centered sprite, no depth */}
-       <div className="z-10 mb-8">
-          <div 
-            className="w-24 h-24 mx-auto image-pixelated"
-            style={{
-                backgroundImage: 'url(/assets/sprites/prf.png)',
-                backgroundSize: '400% 200%', // 4 cols, 2 rows
-                backgroundPosition: '0 0',     // First sprite
-                imageRendering: 'pixelated'
-            }}
-          />
-       </div>
+       <div className="w-full max-w-5xl z-10 px-8 flex flex-row items-end gap-6 mb-8">
+           {/* Character Window (Shadow) - Left of box */}
+           <div className="shrink-0 mb-2">
+              <div 
+                className="w-32 h-32 image-pixelated"
+                style={{
+                    backgroundImage: 'url(/assets/sprites/RegularPoseBoy.png)',
+                    backgroundSize: '100% 100%',
+                    backgroundPosition: 'center',
+                    imageRendering: 'pixelated',
+                    filter: 'brightness(0) opacity(0.25)' // Guide shadow: Light gray silhouette
+                }}
+              />
+           </div>
 
-       {/* Dialogue Box - Classic Game Boy style */}
-       <div className="w-full max-w-xl z-10 px-4" onClick={handleNext}>
-         <div className="bg-gray-100 border-4 border-black p-4 relative min-h-[160px]">
-           <TypewriterText text={lines[step]} onComplete={() => {}} speed={30} />
-           {/* Blinking arrow to indicate more text */}
-           <div className="absolute bottom-4 right-4 animate-bounce">▼</div>
-         </div>
+           {/* Dialogue Box - Wider and Next to char */}
+           <div className="flex-grow cursor-pointer" onClick={handleNext}>
+             <div className="bg-gray-100 border-4 border-black p-8 relative min-h-[180px] shadow-lg">
+               <TypewriterText text={lines[step]} onComplete={() => {}} speed={30} />
+               {/* Blinking arrow to indicate more text */}
+               <div className="absolute bottom-4 right-4 animate-bounce">▼</div>
+             </div>
+           </div>
        </div>
     </div>
   );
