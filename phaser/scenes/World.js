@@ -24,8 +24,16 @@ export class World extends Phaser.Scene {
     // Load the background map image
     this.load.image('map_background', '/assets/sprites/map_background.png');
     
-    // Load assets here when you have them
-    // this.load.spritesheet('player', '/assets/sprites/player.png', { frameWidth: 32, frameHeight: 32 });
+    // Load character sprite sheets
+    const characterId = this.game.registry.get('characterId');
+    if (characterId === 'green_cap') {
+      this.load.spritesheet('player', '/assets/sprites/RegularPoseBoy.png', { frameWidth: 32, frameHeight: 32 });
+    } else if (characterId === 'black_cap') {
+      this.load.spritesheet('player', '/assets/sprites/RegularPoseGirl.png', { frameWidth: 32, frameHeight: 32 });
+    } else {
+      // Fallback to Alex if no character selected
+      this.load.spritesheet('player', '/assets/sprites/RegularPoseBoy.png', { frameWidth: 32, frameHeight: 32 });
+    }
   }
 
   create() {

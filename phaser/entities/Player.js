@@ -1,8 +1,10 @@
 export class Player {
   constructor(scene, x, y) {
     this.scene = scene;
-    this.sprite = scene.add.rectangle(x, y, 40, 40, 0x00ff00);
+    // Create sprite from the loaded sprite sheet
+    this.sprite = scene.add.sprite(x, y, 'player', 0);
     this.sprite.setDepth(10);
+    this.sprite.setScale(2); // Scale up 2x for better visibility
   }
 
   moveTo(x, y) {

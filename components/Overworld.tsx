@@ -134,6 +134,7 @@ export const Overworld: React.FC<OverworldProps> = ({ user, onLogout }: Overworl
                     onReady={(game: Phaser.Game) => {
                         gameRef.current = game;
                     }}
+                    characterId={user.characterId}
                 />
             </div>
 
