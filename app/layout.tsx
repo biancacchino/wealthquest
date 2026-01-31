@@ -2,8 +2,8 @@ import "../styles/globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Pocket Paths",
-  description: "A calm, Pokémon-style financial literacy adventure."
+  title: "Pocket Monsters - ElleHacks 2026",
+  description: "A high-fidelity retro Pokémon-style authentication system."
 };
 
 export default function RootLayout({
@@ -13,6 +13,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+         <script src="https://cdn.tailwindcss.com"></script>
+         <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+      </head>
       <body>
         <main>{children}</main>
       </body>

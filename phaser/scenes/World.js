@@ -40,6 +40,11 @@ export class World extends Phaser.Scene {
       startPos.y * tileSize + tileSize / 2
     );
 
+    // Camera follow with slight smoothing (0.1) as requested
+    this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+    this.cameras.main.setZoom(2); // Zoom in for that retro feel
+
+
     // Add keyboard controls
     this.cursors = this.input.keyboard.createCursorKeys();
 

@@ -1,54 +1,108 @@
 "use client";
 
-import Link from "next/link";
-import { loadGameState, clearGameState } from "../lib/storage";
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from 'react';
+import { AppView, UserProfile, CharacterId } from '../types';
+import { getCurrentSession, setCurrentSession, saveUser, createInitialGameState } from '../services/storage';
+import { LoginScreen } from '../components/LoginScreen';
+import { IntroScene } from '../components/IntroScene';
+import { CharacterSelect } from '../components/CharacterSelect';
+import { Overworld } from '../components/Overworld';
+import { RetroBox } from '../components/RetroBox';
 
-export default function HomePage() {
-  const [hasSave, setHasSave] = useState(false);
+// Ensure we are client-side only for this logic to avoid hydration mismatches with localStorage
+export default function App() {
+  const [view, setView] = useState<AppView>(AppView.LOGIN);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setHasSave(Boolean(loadGameState()));
+    setIsClient(true);
+    const sessionUser = getCurrentSession();
+    if (sessionUser) {
+      setCurrentUser(sessionUser);
+      setView(AppView.OVERWORLD);
+    }
   }, []);
 
-  const handleNewGame = () => {
-    clearGameState();
-    setHasSave(false);
+  if (!isClient) return null; // Avoid hydration mismatch
+
+  const handleLoginSuccess = (user: UserProfile, isNew: boolean) => {
+    setCurrentUser(user);
+    if (isNew) {
+      setView(AppView.INTRO);
+    } else {
+      setView(AppView.CONTINUE_PROMPT);
+    }
+  };
+
+  const handleIntroComplete = () => {
+    setView(AppView.CHAR_SELECT);
+  };
+
+  const handleCharacterSelected = (id: CharacterId) => {
+    if (!currentUser) return;
+    const updatedUser = { ...currentUser, characterId: id };
+    saveUser(updatedUser);
+    setCurrentUser(updatedUser);
+    setCurrentSession(updatedUser.username);
+    setView(AppView.OVERWORLD);
+  };
+
+  const handleContinue = (fresh: boolean) => {
+    if (!currentUser) return;
+    if (fresh) {
+      const resetUser = { ...currentUser, characterId: null, gameState: createInitialGameState() };
+      setCurrentUser(resetUser);
+      saveUser(resetUser);
+      setView(AppView.INTRO);
+    } else {
+      setCurrentSession(currentUser.username);
+      setView(AppView.OVERWORLD);
+    }
   };
 
   return (
-    <div className="stack">
-      <span className="badge">Empowerment Journey</span>
-      <h1>Pocket Paths</h1>
-      <p>
-        Explore a calm town, meet friendly guides, and practice money choices
-        without pressure.
-      </p>
-      <div className="card stack">
-        <h2>Start playing</h2>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          {hasSave ? (
-            <Link className="button-primary" href="/game">
-              Continue
-            </Link>
-          ) : (
-            <Link className="button-primary" href="/onboarding">
-              New Game
-            </Link>
-          )}
-          <Link className="button-secondary" href="/onboarding" onClick={handleNewGame}>
-            New Game (reset)
-          </Link>
+    <div className="min-h-screen bg-black">
+      {view === AppView.LOGIN && (
+        <LoginScreen onSuccess={handleLoginSuccess} />
+      )}
+
+      {view === AppView.CONTINUE_PROMPT && currentUser && (
+        <div className="flex items-center justify-center min-h-screen bg-gray-900 p-4">
+          <RetroBox title="SAVE DATA DETECTED" className="max-w-md w-full">
+            <p className="text-sm mb-6 leading-loose font-bold">
+              Trainer {currentUser.username}, your journey was paused at {currentUser.gameState.location}. 
+              Continue where you left off?
+            </p>
+            <div className="flex flex-col gap-3">
+              <button 
+                onClick={() => handleContinue(false)}
+                className="bg-black text-white p-3 uppercase text-xs hover:bg-gray-800 border-4 border-black font-bold"
+              >
+                Continue Adventure
+              </button>
+              <button 
+                onClick={() => handleContinue(true)}
+                className="bg-red-600 text-white p-3 uppercase text-xs hover:bg-red-700 border-4 border-black font-bold"
+              >
+                Start New Save
+              </button>
+            </div>
+          </RetroBox>
         </div>
-      </div>
-      <div className="card">
-        <h3>How it works</h3>
-        <ul>
-          <li>Move around the town using arrow keys or the on-screen pad.</li>
-          <li>Step on encounter tiles to make spending choices.</li>
-          <li>See a calm “What changed?” recap after every decision.</li>
-        </ul>
-      </div>
+      )}
+
+      {view === AppView.INTRO && currentUser && (
+        <IntroScene username={currentUser.username} onFinished={handleIntroComplete} />
+      )}
+
+      {view === AppView.CHAR_SELECT && (
+        <CharacterSelect onSelected={handleCharacterSelected} />
+      )}
+
+      {view === AppView.OVERWORLD && currentUser && (
+        <Overworld user={currentUser} onLogout={() => setView(AppView.LOGIN)} />
+      )}
     </div>
   );
 }

@@ -8,6 +8,8 @@ export function createGame(containerId) {
     height: 400,
     parent: containerId,
     backgroundColor: '#1a1a1a',
+    pixelArt: true, // Crucial for pixel-perfect scaling
+    roundPixels: true, // Prevents sub-pixel blurring
     scene: [World],
     physics: {
       default: 'arcade',
