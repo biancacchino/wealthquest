@@ -23,17 +23,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
     const existingUser = loadUser(username);
 
     if (existingUser) {
-        // Simple password check (in real app, hash and compare)
         if (existingUser.passwordHash === password) {
             onSuccess(existingUser, false);
         } else {
             setError('Invalid credentials');
         }
     } else {
-       // Create new user flow implicitly or explicitly
-       // For this demo, let's treat unknown user + password as registration attempt
-       // if the user wants to login, they should exist. 
-       // Let's add two buttons instead.
        setError('No saved game found.');
     }
   };
@@ -63,64 +58,167 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess }) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-indigo-900 text-white p-4">
-      <div className="mb-8 text-center animate-pulse">
-        <h1 className="text-6xl text-yellow-400 font-bold mb-2 press-start tracking-tighter drop-shadow-md" style={{ textShadow: '4px 4px 0 #b45309' }}>WEALTH</h1>
-        <h1 className="text-6xl text-yellow-400 font-bold press-start tracking-tighter drop-shadow-md" style={{ textShadow: '4px 4px 0 #b45309' }}>QUEST</h1>
-        <p className="text-[10px] text-yellow-200 mt-6 font-mono tracking-widest uppercase opacity-80">Play your life. Live the outcome.</p>
+    <div className="flex flex-col items-center justify-center min-h-screen p-4" style={{ backgroundColor: '#7eb8d8' }}>
+      
+      {/* Big Title */}
+      <div className="text-center mb-6">
+        <h1 
+          className="text-4xl md:text-5xl font-bold tracking-tight animate-pulse"
+          style={{ 
+            color: '#facc15',
+            textShadow: '4px 4px 0 #4080a8, 6px 6px 0 #306080, 0 0 20px rgba(255,255,255,0.5)',
+            fontFamily: '"Press Start 2P", monospace',
+            animation: 'retroPulse 2s ease-in-out infinite'
+          }}
+        >
+          WEALTH QUEST
+        </h1>
+        <p className="text-sm mt-3 font-bold" style={{ color: '#305878' }}>
+          Your financial adventure awaits!
+        </p>
+        <style>{`
+          @keyframes retroPulse {
+            0%, 100% { 
+              transform: scale(1);
+              text-shadow: 4px 4px 0 #4080a8, 6px 6px 0 #306080, 0 0 10px rgba(255,255,255,0.3);
+            }
+            50% { 
+              transform: scale(1.05);
+              text-shadow: 4px 4px 0 #4080a8, 6px 6px 0 #306080, 0 0 30px rgba(255,255,255,0.8), 0 0 60px rgba(100,200,255,0.4);
+            }
+          }
+        `}</style>
       </div>
 
-      <div className="bg-gray-800 p-1 rounded border-4 border-gray-600 w-full max-w-lg">
-        <div className="bg-gray-200 border-4 border-gray-400 p-8 text-black">
-          {error && <div className="text-red-600 text-xs mb-4 text-center">{error}</div>}
+      {/* Main Panel - Pixel art style outer frame */}
+      <div 
+        className="w-full max-w-lg p-2"
+        style={{ 
+          backgroundColor: '#9ccce8',
+          border: '4px solid #5a98b8',
+          borderRadius: '8px',
+          boxShadow: 'inset 2px 2px 0 #b8e0f0, inset -2px -2px 0 #4888a8'
+        }}
+      >
+        
+        {/* Title Bar - like classic game windows */}
+        <div 
+          className="flex items-center justify-between px-3 py-2 mb-2"
+          style={{ 
+            backgroundColor: '#5a98b8',
+            borderRadius: '4px'
+          }}
+        >
+          <span className="text-white font-bold text-sm tracking-wide">Login</span>
+          <span className="text-white/70 text-xs">▼ Menu</span>
+        </div>
+
+        {/* Inner Content Panel - cream/white with pixel border */}
+        <div 
+          className="p-4"
+          style={{ 
+            backgroundColor: '#fffef8',
+            border: '4px solid #c8d8e8',
+            borderRadius: '4px',
+            boxShadow: 'inset 2px 2px 0 #fff, inset -2px -2px 0 #b8c8d8'
+          }}
+        >
+          
+          {error && (
+            <div 
+              className="mb-4 p-2 text-center text-sm font-bold"
+              style={{ 
+                backgroundColor: '#ffcccc',
+                border: '3px solid #cc6666',
+                color: '#881111'
+              }}
+            >
+              {error}
+            </div>
+          )}
           
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
             <div>
-              <label className="block text-xs font-bold mb-1">USERNAME</label>
+              <label className="block text-xs font-bold mb-1 text-gray-700">NAME</label>
               <input 
                 type="text" 
                 value={username}
                 onChange={(e) => setUsername(e.target.value.toUpperCase())}
-                className="w-full bg-white border-2 border-gray-400 p-4 font-mono uppercase focus:outline-none focus:border-black"
+                className="w-full p-3 font-mono uppercase text-gray-800 focus:outline-none"
+                style={{ 
+                  backgroundColor: '#f0f8ff',
+                  border: '3px solid #a8c8e0',
+                  borderRadius: '2px',
+                  boxShadow: 'inset 1px 1px 0 #d0e0f0'
+                }}
                 maxLength={12}
+                placeholder="ENTER NAME..."
               />
             </div>
             <div>
-            <label className="block text-xs font-bold mb-1">PASSWORD</label>
+              <label className="block text-xs font-bold mb-1 text-gray-700">PASSWORD</label>
               <input 
                 type="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-white border-2 border-gray-400 p-4 font-mono focus:outline-none focus:border-black"
+                className="w-full p-3 font-mono text-gray-800 focus:outline-none"
+                style={{ 
+                  backgroundColor: '#f0f8ff',
+                  border: '3px solid #a8c8e0',
+                  borderRadius: '2px',
+                  boxShadow: 'inset 1px 1px 0 #d0e0f0'
+                }}
+                placeholder="••••••••"
               />
-            </div>
-
-            <div className="flex gap-2 mt-4">
-                <div className="flex-1 flex flex-col gap-1">
-                    <button 
-                        type="button"
-                        onClick={handleRegister}
-                        className="w-full bg-green-600 text-white p-2 text-xs font-bold hover:bg-green-700 border-b-4 border-green-800 active:border-b-0 active:mt-1"
-                    >
-                        NEW ACCOUNT
-                    </button>
-                    <span className="text-[10px] text-gray-500 text-center font-bold">Start fresh</span>
-                </div>
-                <div className="flex-1 flex flex-col gap-1">
-                    <button 
-                        type="submit"
-                        className="w-full bg-blue-600 text-white p-2 text-xs font-bold hover:bg-blue-700 border-b-4 border-blue-800 active:border-b-0 active:mt-1"
-                    >
-                        CONTINUE
-                    </button>
-                    <span className="text-[10px] text-gray-500 text-center font-bold">Load your progress</span>
-                </div>
             </div>
           </form>
         </div>
+
+        {/* Bottom Dialog Box - pill shaped like the reference */}
+        <div 
+          className="mt-2 py-3 px-6 text-center"
+          style={{ 
+            backgroundColor: '#4888b0',
+            borderRadius: '20px',
+            border: '3px solid #3070a0',
+            boxShadow: 'inset 0 2px 0 #68a8d0, inset 0 -2px 0 #285888'
+          }}
+        >
+          <p className="text-white font-bold text-sm">What would you like to do?</p>
+        </div>
+
+        {/* Action Buttons - classic RPG style */}
+        <div className="flex gap-2 mt-2 justify-center">
+          <button 
+            type="button"
+            onClick={handleRegister}
+            className="px-5 py-2 font-bold text-sm text-gray-700 active:translate-y-0.5"
+            style={{ 
+              backgroundColor: '#f8f8f0',
+              border: '3px solid #c0c0b0',
+              borderRadius: '4px',
+              boxShadow: 'inset 1px 1px 0 #fff, inset -1px -1px 0 #a0a090, 0 2px 0 #909080'
+            }}
+          >
+            New Game
+          </button>
+          <button 
+            type="button"
+            onClick={handleLogin}
+            className="px-5 py-2 font-bold text-sm text-gray-700 active:translate-y-0.5"
+            style={{ 
+              backgroundColor: '#f8f8f0',
+              border: '3px solid #c0c0b0',
+              borderRadius: '4px',
+              boxShadow: 'inset 1px 1px 0 #fff, inset -1px -1px 0 #a0a090, 0 2px 0 #909080'
+            }}
+          >
+            Continue
+          </button>
+        </div>
       </div>
       
-      <p className="mt-8 text-xs text-gray-400">Made at ElleHacks 2026 by Lori, Bianca, Tracy</p>
+      <p className="mt-6 text-xs text-blue-900/60 font-bold">Made at ElleHacks 2026 by BLT: Built Like That</p>
     </div>
   );
 };
