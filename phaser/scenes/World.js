@@ -373,6 +373,18 @@ export class World extends Phaser.Scene {
       // Use Physics velocity instead of manual position update
       this.player.setVelocity(dx * this.moveSpeed, dy * this.moveSpeed);
       
+      // Determine facing direction and play walk animation
+      // Prioritize horizontal over vertical for diagonals (or change as you prefer)
+      let direction;
+      if (dx < 0) direction = 'left';
+      else if (dx > 0) direction = 'right';
+      else if (dy < 0) direction = 'up';
+      else if (dy > 0) direction = 'down';
+      
+      if (direction) {
+        this.player.playWalkAnimation(direction);
+      }
+      
       // Update game state with tile position
       const tileX = Math.floor(this.player.sprite.x / tileSize);
       const tileY = Math.floor(this.player.sprite.y / tileSize);
@@ -381,8 +393,9 @@ export class World extends Phaser.Scene {
       // Check for encounters at current tile
       this.checkEncounterAt(tileX, tileY);
     } else {
-        // Stop moving
+        // Stop moving and play idle animation
         this.player.setVelocity(0, 0);
+        this.player.playIdleAnimation();
     }
   }
 

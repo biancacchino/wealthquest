@@ -1,9 +1,12 @@
 export class Player {
   constructor(scene, x, y) {
     this.scene = scene;
+    this.direction = 'down'; // Default facing direction
+    
+    // Get the sprite prefix from registry (set in World.js preload)
+    this.spritePrefix = scene.game.registry.get('spritePrefix') || 'alex';
+    
     // Create a physics sprite instead of a simple rectangle
-    // Using a blank texture or create one if needed, assuming we want a simple box for now
-    // If 'player' texture exists, use it, otherwise use a colored rectangle texture
     if (scene.textures.exists('player')) {
         this.sprite = scene.physics.add.sprite(x, y, 'player');
     } else {
