@@ -99,7 +99,7 @@ export class World extends Phaser.Scene {
     });
     
     // Movement speed (pixels per frame)
-    this.moveSpeed = 4;
+    this.moveSpeed = 2;
 
     // Add UI text (fixed to camera)
     this.add.text(10, 10, 'Use WASD to move', {
@@ -139,7 +139,7 @@ export class World extends Phaser.Scene {
     if (dx !== 0 || dy !== 0) {
       // Normalize diagonal movement
       let moveX = dx;
-      let moveY = dy;
+      let moveY = dy; // Slow down vertical movement
       if (dx !== 0 && dy !== 0) {
         const factor = 0.707; // 1/sqrt(2)
         moveX *= factor;
