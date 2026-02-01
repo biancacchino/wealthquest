@@ -16,15 +16,15 @@ import { ENCOUNTERS } from "../phaser/data/encounters";
 import { MoneyHUD } from "./MoneyHUD";
 import { MONEY_GOALS } from "../constants";
 import { ShopPopup } from "./ShopPopup";
-import { 
-  BusIcon, 
-  MovieIcon, 
-  PizzaIcon, 
-  HomeIcon, 
-  CoffeeIcon, 
-  BankIcon, 
-  ArcadeIcon, 
-  MallIcon 
+import {
+  BusIcon,
+  MovieIcon,
+  PizzaIcon,
+  HomeIcon,
+  CoffeeIcon,
+  BankIcon,
+  ArcadeIcon,
+  MallIcon,
 } from "./PixelIcons";
 
 // Mapping of Door IDs to display names
@@ -54,13 +54,31 @@ const DOOR_MAPPING: Record<string, string> = {
 
 const BUS_STOPS = [
   // Offsetting landing positions by +50 on Y to ensure player lands safely OUTSIDE the trigger zone
-  { id: 'DOOR_BUS_MOVIES', name: 'Movies', icon: MovieIcon, x: 1435, y: 788 },
-  { id: 'DOOR_BUS_PIZZA', name: 'Pizza Plaza', icon: PizzaIcon, x: 1449, y: 422 },
-  { id: 'DOOR_BUS_APARTMENT', name: 'Residences', icon: HomeIcon, x: 515, y: 345 },
-  { id: 'DOOR_BUS_COFFEE', name: 'Coffee District', icon: CoffeeIcon, x: 147, y: 665 },
-  { id: 'DOOR_BUS_BANK', name: 'Bank', icon: BankIcon, x: 182, y: 864 },
-  { id: 'DOOR_BUS_ARCADE', name: 'Arcade', icon: ArcadeIcon, x: 665, y: 885 },
-  { id: 'DOOR_BUS_MALL', name: 'Mall', icon: MallIcon, x: 793, y: 739 }
+  { id: "DOOR_BUS_MOVIES", name: "Movies", icon: MovieIcon, x: 1435, y: 788 },
+  {
+    id: "DOOR_BUS_PIZZA",
+    name: "Pizza Plaza",
+    icon: PizzaIcon,
+    x: 1449,
+    y: 422,
+  },
+  {
+    id: "DOOR_BUS_APARTMENT",
+    name: "Residences",
+    icon: HomeIcon,
+    x: 515,
+    y: 345,
+  },
+  {
+    id: "DOOR_BUS_COFFEE",
+    name: "Coffee District",
+    icon: CoffeeIcon,
+    x: 147,
+    y: 665,
+  },
+  { id: "DOOR_BUS_BANK", name: "Bank", icon: BankIcon, x: 182, y: 864 },
+  { id: "DOOR_BUS_ARCADE", name: "Arcade", icon: ArcadeIcon, x: 665, y: 885 },
+  { id: "DOOR_BUS_MALL", name: "Mall", icon: MallIcon, x: 793, y: 739 },
 ];
 
 // Market shop items
@@ -172,13 +190,13 @@ export const Overworld: React.FC<OverworldProps> = ({
     setActiveDoorId(null);
     setShowShop(false);
     setMovementLocked(false);
-    
+
     if (!skipPushback) {
-        // Step back slightly to avoid re-triggering immediately
-        const world = gameRef.current?.scene?.getScene("World") as any;
-        if (world && world.pushPlayerBack) {
-          world.pushPlayerBack();
-        }
+      // Step back slightly to avoid re-triggering immediately
+      const world = gameRef.current?.scene?.getScene("World") as any;
+      if (world && world.pushPlayerBack) {
+        world.pushPlayerBack();
+      }
     }
   };
 
@@ -186,16 +204,11 @@ export const Overworld: React.FC<OverworldProps> = ({
     if (activeDoorId) {
       notifyDecision(activeDoorId, "yes");
     }
-    
-    // For market door, show shop popup only after confirmation
-    if (activeDoorId === 'DOOR_MARKET') {
+
+    // Check if it's a shop door
+    if (activeDoorId === "DOOR_MARKET" || activeDoorId === "DOOR_MALL") {
       setShowShop(true);
       // Do not close door yet, shop is an overlay
-      return;
-    }
-    // For mall, keep previous logic
-    if (activeDoorId === 'DOOR_MALL') {
-      setShowShop(true);
       return;
     }
 
@@ -205,26 +218,32 @@ export const Overworld: React.FC<OverworldProps> = ({
     closeDoor();
   };
 
-  const handleBusTravel = (destination: typeof BUS_STOPS[0]) => {
-     if (!activeDoorId) return;
-     
-     // 1. Set traveling state
-     setIsTraveling(true);
-     
-     // 2. Notify game of "Yes" decision for the CURRENT door (to start its cooldown)
-     notifyDecision(activeDoorId, 'yes');
-     
-     // 3. Wait 5 seconds then teleport
-     setTimeout(() => {
-         const world = gameRef.current?.scene?.getScene("World") as any;
-         if (world && world.teleportPlayer) {
-             world.teleportPlayer(destination.x, destination.y);
-         }
-         
-         setIsTraveling(false);
-         // Pass true to skip pushing player back to original bus top
-         closeDoor(true);
-     }, 5000);
+  const handleBusTravel = (destination: (typeof BUS_STOPS)[0]) => {
+    if (!activeDoorId) return;
+
+    // 1. Set traveling state
+    setIsTraveling(true);
+
+    // 2. Notify game of "Yes" decision for the CURRENT door (to start its cooldown)
+    notifyDecision(activeDoorId, "yes");
+
+    // 3. Wait 5 seconds then teleport
+    setTimeout(() => {
+      const world = gameRef.current?.scene?.getScene("World") as any;
+      if (world && world.teleportPlayer) {
+        world.teleportPlayer(destination.x, destination.y);
+        
+        // Also set cooldown on destination so we don't trigger it immediately upon arrival
+        if (world.handleDoorDecision) {
+           // Treat destination as "visited" so it has a cooldown
+           world.handleDoorDecision(destination.id, 'yes');
+        }
+      }
+
+      setIsTraveling(false);
+      // Pass true to skip pushing player back to original bus top
+      closeDoor(true);
+    }, 5000);
   };
 
   const saveMoneyState = (updatedMoney: MoneyState) => {
@@ -402,88 +421,110 @@ export const Overworld: React.FC<OverworldProps> = ({
 
       {/* BUS STOP SPECIAL POPUP */}
       {activeDoorId && activeDoorId.includes("DOOR_BUS") && (
-        <div className={`absolute inset-0 z-20 flex items-center justify-center p-4 ${isTraveling ? 'bg-black' : 'bg-black/60'}`}>
+        <div
+          className={`absolute inset-0 z-20 flex items-center justify-center p-4 ${isTraveling ? "bg-black" : "bg-black/60"}`}
+        >
           {/* New Bubbly Blue Container */}
           <div className="bg-[#60a5fa] border-4 border-white rounded-[2rem] shadow-[0_0_0_4px_#3b82f6,0_10px_20px_rgba(0,0,0,0.5)] w-full max-w-4xl overflow-hidden flex flex-col md:flex-row relative animate-bounce-in min-h-[500px]">
-            
             {/* Left Side - Big Bus Icon */}
-            <div className={`bg-[#3b82f6] md:w-1/3 p-6 flex flex-col items-center justify-center relative overflow-hidden transition-all duration-500 ${isTraveling ? 'w-full md:w-full' : ''}`}>
-                {/* Decorative circles */}
-                <div className="absolute top-0 left-0 w-full h-full opacity-20">
-                    <div className="absolute top-2 left-2 w-4 h-4 rounded-full bg-white"></div>
-                    <div className="absolute bottom-4 right-4 w-8 h-8 rounded-full bg-white"></div>
-                    <div className="absolute top-1/2 left-1/4 w-3 h-3 rounded-full bg-white"></div>
+            <div
+              className={`bg-[#3b82f6] md:w-1/3 p-6 flex flex-col items-center justify-center relative overflow-hidden transition-all duration-500 ${isTraveling ? "w-full md:w-full" : ""}`}
+            >
+              {/* Decorative circles */}
+              <div className="absolute top-0 left-0 w-full h-full opacity-20">
+                <div className="absolute top-2 left-2 w-4 h-4 rounded-full bg-white"></div>
+                <div className="absolute bottom-4 right-4 w-8 h-8 rounded-full bg-white"></div>
+                <div className="absolute top-1/2 left-1/4 w-3 h-3 rounded-full bg-white"></div>
+              </div>
+
+              <div className="relative z-10 text-white text-center">
+                <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mb-4 mx-auto backdrop-blur-sm">
+                  <BusIcon className="w-16 h-16 animate-pulse" />
                 </div>
-                
-                <div className="relative z-10 text-white text-center">
-                    <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mb-4 mx-auto backdrop-blur-sm">
-                        <BusIcon className="w-16 h-16 animate-pulse" />
-                    </div>
-                    {isTraveling ? (
-                        <h2 className="text-3xl font-bold uppercase tracking-widest text-white drop-shadow-md font-sans mb-2">Departing...</h2>
-                    ) : (
-                        <>
-                            <h2 className="text-xl font-bold uppercase tracking-wider text-white drop-shadow-md font-sans">
-                                {DOOR_MAPPING[activeDoorId]?.replace('Bus Stop (', '').replace(')', '') || "Station"}
-                            </h2>
-                            <p className="text-xs text-blue-100 mt-2 font-sans opacity-80">City Transit System</p>
-                        </>
-                    )}
-                </div>
+                {isTraveling ? (
+                  <h2 className="text-3xl font-bold uppercase tracking-widest text-white drop-shadow-md font-sans mb-2">
+                    Departing...
+                  </h2>
+                ) : (
+                  <>
+                    <h2 className="text-xl font-bold uppercase tracking-wider text-white drop-shadow-md font-sans">
+                      {DOOR_MAPPING[activeDoorId]
+                        ?.replace("Bus Stop (", "")
+                        .replace(")", "") || "Station"}
+                    </h2>
+                    <p className="text-xs text-blue-100 mt-2 font-sans opacity-80">
+                      City Transit System
+                    </p>
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Right Side - Content */}
             {!isTraveling && (
-            <div className="flex-1 p-6 md:p-8 bg-gradient-to-br from-blue-400 to-blue-500">
+              <div className="flex-1 p-6 md:p-8 bg-gradient-to-br from-blue-400 to-blue-500">
                 <div className="flex flex-col h-full">
-                    <h3 className="text-white font-black text-lg mb-4 uppercase drop-shadow-sm flex items-center gap-2">
-                        <span>Select Destination</span>
-                        <span className="text-xs bg-white text-blue-600 px-3 py-1 rounded-full font-bold ml-auto shadow-sm">$2.25 Fare</span>
-                    </h3>
+                  <h3 className="text-white font-black text-lg mb-4 uppercase drop-shadow-sm flex items-center gap-2">
+                    <span>Select Destination</span>
+                    <span className="text-xs bg-white text-blue-600 px-3 py-1 rounded-full font-bold ml-auto shadow-sm">
+                      $2.25 Fare
+                    </span>
+                  </h3>
 
-                    {/* Button Grid (2 Columns) */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
-                        {BUS_STOPS.filter(stop => stop.id !== activeDoorId).map(stop => (
-                            <button
-                                key={stop.id}
-                                onClick={() => handleBusTravel(stop)}
-                                className="bg-white hover:bg-yellow-300 text-blue-900 p-4 rounded-xl shadow-sm hover:shadow-lg transition-all transform hover:-translate-y-1 flex items-center gap-3 border-2 border-transparent hover:border-white group min-h-[80px] w-full"
-                            >
-                                <div className="bg-blue-100 p-3 rounded-lg group-hover:bg-white/50 transition-colors shrink-0">
-                                    <stop.icon className="w-8 h-8 text-blue-600 group-hover:text-blue-800" />
-                                </div>
-                                <div className="flex-1 text-left min-w-0">
-                                    <span className="block font-black text-sm uppercase tracking-tight leading-tight group-hover:text-black break-words">{stop.name}</span>
-                                </div>
-                            </button>
-                        ))}
-                    </div>
+                  {/* Button Grid (2 Columns) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
+                    {BUS_STOPS.filter((stop) => stop.id !== activeDoorId).map(
+                      (stop) => (
+                        <button
+                          key={stop.id}
+                          onClick={() => handleBusTravel(stop)}
+                          className="bg-white hover:bg-yellow-300 text-blue-900 p-4 rounded-xl shadow-sm hover:shadow-lg transition-all transform hover:-translate-y-1 flex items-center gap-3 border-2 border-transparent hover:border-white group min-h-[80px] w-full"
+                        >
+                          <div className="bg-blue-100 p-3 rounded-lg group-hover:bg-white/50 transition-colors shrink-0">
+                            <stop.icon className="w-8 h-8 text-blue-600 group-hover:text-blue-800" />
+                          </div>
+                          <div className="flex-1 text-left min-w-0">
+                            <span className="block font-black text-sm uppercase tracking-tight leading-tight group-hover:text-black break-words">
+                              {stop.name}
+                            </span>
+                          </div>
+                        </button>
+                      ),
+                    )}
+                  </div>
 
-                    <button
-                        onClick={() => {
-                            if (activeDoorId) notifyDecision(activeDoorId, 'no');
-                            closeDoor();
-                        }}
-                        className="mt-auto w-full bg-blue-900/40 hover:bg-red-500 hover:text-white text-white/90 py-4 rounded-xl font-bold uppercase text-sm tracking-widest transition-colors backdrop-blur-sm border-2 border-transparent hover:border-white/50"
-                    >
-                        Cancel Ride
-                    </button>
+                  <button
+                    onClick={() => {
+                      if (activeDoorId) notifyDecision(activeDoorId, "no");
+                      closeDoor();
+                    }}
+                    className="mt-auto w-full bg-blue-900/40 hover:bg-red-500 hover:text-white text-white/90 py-4 rounded-xl font-bold uppercase text-sm tracking-widest transition-colors backdrop-blur-sm border-2 border-transparent hover:border-white/50"
+                  >
+                    Cancel Ride
+                  </button>
                 </div>
-            </div>
+              </div>
             )}
-            
+
             {/* Full width loading bar when traveling */}
             {isTraveling && (
-                 <div className="absolute bottom-0 left-0 w-full h-8 bg-blue-900">
-                    <div className="h-full bg-yellow-400 animate-[width_5s_linear_forwards]" style={{width: '0%', animationName: 'grow', animationDuration: '5s', animationTimingFunction: 'linear', animationFillMode: 'forwards'}}></div>
-                    <style>{`@keyframes grow { from { width: 0%; } to { width: 100%; } }`}</style>
-                 </div>
+              <div className="absolute bottom-0 left-0 w-full h-8 bg-blue-900">
+                <div
+                  className="h-full bg-yellow-400 animate-[width_5s_linear_forwards]"
+                  style={{
+                    width: "0%",
+                    animationName: "grow",
+                    animationDuration: "5s",
+                    animationTimingFunction: "linear",
+                    animationFillMode: "forwards",
+                  }}
+                ></div>
+                <style>{`@keyframes grow { from { width: 0%; } to { width: 100%; } }`}</style>
+              </div>
             )}
           </div>
         </div>
       )}
-
-
 
       {/* SHOP POPUP FOR ENCOUNTERS */}
       {showShop && activeEncounterId && activeEncounter && (

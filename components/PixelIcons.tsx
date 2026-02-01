@@ -1,11 +1,14 @@
-import React from 'react';
+import React from "react";
 
-export const PixelIconWrapper: React.FC<{ children: React.ReactNode, className?: string }> = ({ children, className = '' }) => (
-  <svg 
-    viewBox="0 0 24 24" 
-    className={`w-8 h-8 ${className}`} 
+export const PixelIconWrapper: React.FC<{
+  children: React.ReactNode;
+  className?: string;
+}> = ({ children, className = "" }) => (
+  <svg
+    viewBox="0 0 24 24"
+    className={`w-8 h-8 ${className}`}
     fill="currentColor"
-    style={{ imageRendering: 'pixelated' }}
+    style={{ imageRendering: "pixelated" }}
     shapeRendering="crispEdges"
     xmlns="http://www.w3.org/2000/svg"
   >
