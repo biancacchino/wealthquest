@@ -17,7 +17,7 @@ export interface Monster {
   sprite: string;
 }
 
-export type MoneyGoalId = 'headphones' | 'game' | 'outfit';
+export type MoneyGoalId = 'treat' | 'headphones' | 'game' | 'outfit' | 'biggoal';
 
 export interface MoneyGoal {
   id: MoneyGoalId;
@@ -44,6 +44,7 @@ export interface MoneyState {
   balance: number;
   goal: MoneyGoal;
   dayIndex: number;
+  weekNumber: number;
   history: ChoiceEvent[];
 }
 

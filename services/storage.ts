@@ -17,6 +17,7 @@ const createInitialMoneyState = (): MoneyState => ({
   balance: 20,
   goal: getDefaultGoal(),
   dayIndex: 0,
+  weekNumber: 0,
   history: []
 });
 
