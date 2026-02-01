@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import type { MoneyState } from "../types";
 
 interface ApartmentRestPopupProps {
   money: MoneyState;
   onClose: () => void;
+  onGiveUp: () => void;
 }
 
 //hello
@@ -42,8 +43,103 @@ const getRestMessage = (money: MoneyState) => {
 export const ApartmentRestPopup: React.FC<ApartmentRestPopupProps> = ({
   money,
   onClose,
+  onGiveUp,
 }) => {
   const restMessage = useMemo(() => getRestMessage(money), [money]);
+  const [confirmingGiveUp, setConfirmingGiveUp] = useState(false);
+
+  if (confirmingGiveUp) {
+    return (
+      <div className="absolute inset-0 z-30 bg-black/70 flex items-center justify-center p-4">
+        <div
+          className="w-full max-w-xl p-2"
+          style={{
+            backgroundColor: "#fca5a5",
+            border: "4px solid #ef4444",
+            borderRadius: "8px",
+            boxShadow: "inset 2px 2px 0 #fecaca, inset -2px -2px 0 #dc2626",
+            fontFamily: '"Press Start 2P", monospace',
+          }}
+        >
+          <div
+            className="flex items-center justify-between px-3 py-2 mb-2"
+            style={{ backgroundColor: "#ef4444", borderRadius: "4px" }}
+          >
+            <span className="text-white font-bold text-xs tracking-wide">
+              End Run?
+            </span>
+            <span className="text-white/70 text-[10px]">⚠️</span>
+          </div>
+
+          <div
+            className="p-6"
+            style={{
+              backgroundColor: "#fffef8",
+              border: "4px solid #fecaca",
+              borderRadius: "4px",
+              boxShadow: "inset 2px 2px 0 #fff, inset -2px -2px 0 #fca5a5",
+            }}
+          >
+            <div className="flex justify-center mb-4">
+              <div
+                className="w-16 h-16"
+                style={{
+                  backgroundColor: "#fee2e2",
+                  border: "3px solid #fca5a5",
+                  borderRadius: "4px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "24px",
+                }}
+              >
+                🚪
+              </div>
+            </div>
+
+            <div className="text-center mb-6">
+              <p className="text-gray-800 font-bold text-xs mb-3">
+                Are you sure?
+              </p>
+              <p className="text-gray-600 text-[10px] mb-2">
+                Your progress will be saved, but this run will end.
+              </p>
+              <p className="text-gray-500 text-[9px]">
+                You&apos;ll see your stats and can start fresh.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <button
+                onClick={onGiveUp}
+                className="w-full py-3 text-[10px] font-bold text-white"
+                style={{
+                  backgroundColor: "#ef4444",
+                  borderRadius: "20px",
+                  border: "3px solid #dc2626",
+                  boxShadow: "inset 0 2px 0 #f87171, inset 0 -2px 0 #b91c1c",
+                }}
+              >
+                Yes, End Run
+              </button>
+              <button
+                onClick={() => setConfirmingGiveUp(false)}
+                className="w-full py-2 text-[10px] font-bold text-gray-600"
+                style={{
+                  backgroundColor: "#f3f4f6",
+                  borderRadius: "16px",
+                  border: "2px solid #d1d5db",
+                  boxShadow: "inset 0 1px 0 #fff, inset 0 -1px 0 #e5e7eb",
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="absolute inset-0 z-30 bg-black/70 flex items-center justify-center p-4">
@@ -134,6 +230,19 @@ export const ApartmentRestPopup: React.FC<ApartmentRestPopupProps> = ({
             }}
           >
             Wake Up
+          </button>
+
+          {/* Give Up / End Run Button */}
+          <button
+            onClick={() => setConfirmingGiveUp(true)}
+            className="w-full mt-2 py-2 text-[9px] font-bold text-red-600 transition-colors hover:bg-red-50"
+            style={{
+              backgroundColor: "transparent",
+              borderRadius: "16px",
+              border: "2px solid #fca5a5",
+            }}
+          >
+            End Run Early
           </button>
         </div>
       </div>
