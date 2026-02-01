@@ -61,21 +61,22 @@ export class World extends Phaser.Scene {
     // --- CREATE COLLISION ZONES ---
     this.createCollisionZones();
 
-    // Create player at starting position
-    const startPos = this.gameState.playerPosition;
-    this.player = new Player(
-      this,
-      startPos.x * tileSize + tileSize / 2,
-      startPos.y * tileSize + tileSize / 2
+    // Create player at starting position (User requested: 310, 225)
+    this.player = new Player(this, 310, 225);
+
+    // Sync GameState to this new position
+    this.gameState.updatePlayerPosition(
+        Math.floor(310 / tileSize), 
+        Math.floor(225 / tileSize)
     );
 
     // --- ADD COLLISIONS ---
     // Player hits buildings -> Stop
     this.physics.add.collider(this.player.sprite, this.buildings);
 
-    // Player touches door -> Trigger
+    // Player touches door -> Check Timer first
     this.physics.add.overlap(this.player.sprite, this.doors, (player, door) => {
-        this.handleDoorTrigger(door.name);
+        this.handleDoorOverlap(door.name);
     });
 
     // Encounter markers (Visual only now, or could convert to triggers too)
@@ -98,7 +99,7 @@ export class World extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, this.mapWidthPx, this.mapHeightPx);
     
     // Zoom in for better view of the big map (2x zoom)
-    this.cameras.main.setZoom(1);
+    this.cameras.main.setZoom(0.40);
     
     // Start camera at top-left corner (0, 0)
     // this.cameras.main.scrollX = 0; // Let follow handle it
@@ -131,6 +132,18 @@ export class World extends Phaser.Scene {
       fontSize: '12px',
       fill: '#888'
     }).setScrollFactor(0);
+
+    // Debug: show player position
+    this.debugText = this.add.text(10, 50, '', {
+        fontSize: '16px',
+        fill: '#00ff00',
+        backgroundColor: '#000000'
+    }).setScrollFactor(0);
+
+    // Track door interaction
+    this.currentOverlappingDoor = null;
+    this.overlapEnterTime = 0;
+    this.lastOverlapFrameTime = 0;
   }
 
   // --- NEW HELPER METHODS ---
@@ -163,8 +176,7 @@ export class World extends Phaser.Scene {
     // ---------------------------------------------------------
 
     // 1. market STORE (Top Left)
-    // Matches encounter at 2,2 (pixels ~64,64)
-    createBuilding(390, 415, 300, 170, 'COLL_CORNER_STORE'); 
+    createBuilding(400, 415, 300, 170, 'COLL_CORNER_STORE'); 
 
     createDoor(570, 530, 40, 60, 'DOOR_WORK');
 
@@ -177,28 +189,24 @@ export class World extends Phaser.Scene {
 
 
     // 3. mall (Top Right - big building)
-    // Format: (X, Y, Width, Height)
-    // X = Left/Right position
-    // Y = Up/Down position (Increase this to move LOWER)
     createBuilding(830, 420, 500, 310, 'COLL_APARTMENT');
-
     createDoor(1025, 680, 40, 60, 'DOOR_WORK');
 
 
       // 6. movie
-    createBuilding(1300, 450, 100, 280, 'COLL_WORK');
-
-       createDoor(1280, 680, 40, 60, 'DOOR_WORK');
+    createBuilding(1320, 450, 100, 280, 'COLL_WORK');
+    createDoor(1280, 680, 40, 60, 'DOOR_WORK');
 
 
     // 4. bank  (Center area)
     createBuilding(190, 680, 230, 100, 'COLL_COFFEE');
-
     createDoor(300, 730, 40, 60, 'DOOR_WORK');
 
 
     // 5. coffee (Bottom Left - very big)
     createBuilding(176, 415, 250, 180, 'COLL_MALL_MAIN');
+    createDoor(290, 540, 40, 60, 'DOOR_WORK');
+
 
     // 6. work / library + bit of a wall st(Bottom Right)
     createBuilding(647, 163, 670, 160, 'COLL_WORK');
@@ -210,19 +218,44 @@ export class World extends Phaser.Scene {
     createDoor(775, 280, 40, 60, 'DOOR_WORK');
 
 
-    
-    // 7. BUS STOPS (Yellow Zones)
-    // BUS STOP 1: (Main Road)
-    createBuilding(350, 243, 10, 85, 'COLL_BUSSTOP_POLE', 0xffff00); // Yellow Pole
-    createDoor(330, 243, 40, 85, 'DOOR_BUSSTOP', 0xffff00); // Yellow Trigger Zone
+    // Beach
+    createDoor(0, 910, 4000, 110, 'DOOR_WORK');
 
-    // BUS STOP 2: (Community Area)
-    createBuilding(100, 245, 10, 85, 'COLL_BUSSTOP_POLE', 0xffff00); 
-    createDoor(120, 245, 40, 85, 'DOOR_BUSSTOP', 0xffff00);
+
+
+    
+    // 7. BUS STOPS (Purple Zones)
+    // BUS STOP 1: (pizza)
+    createDoor(1450, 300, 15, 70, 'DOOR_BUSSTOP', 0x800080); 
+
+     // BUS STOP : (Movie)
+    createDoor(1430, 710, 15, 30, 'DOOR_BUSSTOP', 0x800080); 
+
+       // BUS STOP : (Mall)
+    createDoor(815, 650, 15, 30, 'DOOR_BUSSTOP', 0x800080); 
+
+
+           // BUS STOP : (Arcade)
+    createDoor(640, 800, 15, 30, 'DOOR_BUSSTOP', 0x800080); 
+
+               // BUS STOP : (Bank)
+    createDoor(180, 780, 15, 30, 'DOOR_BUSSTOP', 0x800080); 
+
+                   // BUS STOP : (Coffe)
+    createDoor(150, 580, 15, 30, 'DOOR_BUSSTOP', 0x800080); 
+
+    // BUS STOP 2: (near apartment  Area)
+    createDoor(490, 270, 15, 30, 'DOOR_BUSSTOP', 0x800080);
 
 
         // Apartment
     createBuilding(210, 5, 280, 200, 'COLL_WORK');
+
+    // apratment block
+        createBuilding(10, 5, 280, 320, 'COLL_WORK');
+
+    // appartment block 2
+        createBuilding(367, 200, 100, 100, 'COLL_WORK');
 
        createDoor(300, 148, 40, 60, 'DOOR_WORK');
 
@@ -262,9 +295,29 @@ export class World extends Phaser.Scene {
     console.log("Collision zones created");
   }
 
+  handleDoorOverlap(doorName) {
+    const now = this.time.now;
+    this.lastOverlapFrameTime = now;
+
+    // 1. Initial Entry: Start Timer
+    if (this.currentOverlappingDoor !== doorName) {
+        this.currentOverlappingDoor = doorName;
+        this.overlapEnterTime = now;
+        console.log(`Entered ${doorName}. Waiting 1s...`);
+        return; 
+    }
+
+    // 2. Waiting (debounce already handled inside handleDoorTrigger or we can add extra check)
+    // Check if 1 second has passed
+    if (now - this.overlapEnterTime >= 1000) {
+        this.handleDoorTrigger(doorName);
+    }
+  }
+
   handleDoorTrigger(doorName) {
       const now = this.time.now;
-      if (this.lastTriggerTime && now - this.lastTriggerTime < 1000) {
+      // Increased cooldown to 3000ms (3 seconds) to prevent re-triggering same popup immediately
+      if (this.lastTriggerTime && now - this.lastTriggerTime < 3000) {
           return;
       }
       this.lastTriggerTime = now;
@@ -320,7 +373,7 @@ export class World extends Phaser.Scene {
           // Use body.reset to properly teleport physics body and kill velocity
           this.player.sprite.body.reset(
               this.savedPlayerPos.x, 
-              this.savedPlayerPos.y + 20 // Apply nudge directly here
+              this.savedPlayerPos.y + 10 
           );
       } else {
           // Fallback if no saved pos (rare)
@@ -396,6 +449,17 @@ export class World extends Phaser.Scene {
         // Stop moving and play idle animation
         this.player.setVelocity(0, 0);
         this.player.playIdleAnimation();
+    }
+
+    // Update debug text with player position
+    if (this.debugText && this.player && this.player.sprite) {
+        this.debugText.setText(`x: ${Math.round(this.player.sprite.x)}, y: ${Math.round(this.player.sprite.y)}`);
+    }
+
+    // Reset overlap if player left the zone
+    if (this.currentOverlappingDoor && (this.time.now - this.lastOverlapFrameTime > 50)) {
+        console.log(`Left ${this.currentOverlappingDoor}`);
+        this.currentOverlappingDoor = null;
     }
   }
 
