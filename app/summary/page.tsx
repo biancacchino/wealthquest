@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getCurrentSession, saveUser, createInitialGameState } from "../../services/storage";
 import { GameState } from "../../types";
@@ -93,7 +93,7 @@ const getImprovementFeedback = (history: any[], bankHistory: any[], stats: { fut
 
 type TabType = 'stats' | 'tips' | 'history';
 
-export default function SummaryPage() {
+function SummaryContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -470,5 +470,25 @@ export default function SummaryPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SummaryPage() {
+  return (
+    <Suspense fallback={
+      <div style={{
+        minHeight: "100vh",
+        backgroundColor: "#1a1a2e",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: "'Press Start 2P', monospace",
+        color: "#7ab8d8"
+      }}>
+        <p>Loading summary...</p>
+      </div>
+    }>
+      <SummaryContent />
+    </Suspense>
   );
 }

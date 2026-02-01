@@ -35,16 +35,12 @@ import { NysePopup } from "./NysePopup";
 import { LibraryPopup } from "./LibraryPopup";
 import { ApartmentRestPopup } from "./ApartmentRestPopup";
 import { GoalReachedPopup } from "./GoalReachedPopup";
-import { MallPopup } from "./MallPopup";
-import { MoviesPopup } from "./MoviesPopup";
-import { ArcadePopup } from "./ArcadePopup";
-import { PizzaPopup } from "./PizzaPopup";
-import { 
-  COFFEE_SHOP_ITEMS, 
-  MALL_SHOP_ITEMS, 
-  MOVIES_SHOP_ITEMS, 
-  ARCADE_SHOP_ITEMS, 
-  PIZZA_SHOP_ITEMS 
+import {
+  COFFEE_SHOP_ITEMS,
+  MALL_SHOP_ITEMS,
+  MOVIES_SHOP_ITEMS,
+  ARCADE_SHOP_ITEMS,
+  PIZZA_SHOP_ITEMS,
 } from "../constants";
 import {
   BusIcon,
@@ -267,6 +263,8 @@ export const Overworld: React.FC<OverworldProps> = ({
   const [showLibraryMenu, setShowLibraryMenu] = useState(false);
   const [showApartmentRest, setShowApartmentRest] = useState(false);
   const [showNyse, setShowNyse] = useState(false);
+  const [showGoalReachedPopup, setShowGoalReachedPopup] = useState(false);
+  const goalPromptShownAtBalanceRef = useRef(0);
   const [modalStep, setModalStep] = useState<"choice" | "preview" | "result">(
     "choice",
   );
@@ -316,7 +314,7 @@ export const Overworld: React.FC<OverworldProps> = ({
   useEffect(() => {
     const goalCost = money.goal?.cost || 0;
     const bankBalance = money.bankBalance || 0;
-    
+
     // Only show popup if:
     // 1. Bank balance meets or exceeds goal cost
     // 2. Balance is higher than when we last showed the prompt (so they earned more)
@@ -333,28 +331,31 @@ export const Overworld: React.FC<OverworldProps> = ({
 
   const handleGoalPurchaseConfirm = () => {
     const goalCost = money.goal.cost;
-    const newBankBalance = Math.round((money.bankBalance - goalCost) * 100) / 100;
-    
+    const newBankBalance =
+      Math.round((money.bankBalance - goalCost) * 100) / 100;
+
     // Record the goal purchase as a choice event
     const event: ChoiceEvent = {
       id: createEventId(),
       encounterId: `goal_${money.goal.id}`,
-      choice: 'buy',
+      choice: "buy",
       cost: goalCost,
-      category: 'want', // Goals are typically wants
+      category: "want", // Goals are typically wants
       deltas: {
         balanceAfter: money.balance,
-        notes: [`🎉 Purchased ${money.goal.label} for $${goalCost.toFixed(2)}!`],
+        notes: [
+          `🎉 Purchased ${money.goal.label} for $${goalCost.toFixed(2)}!`,
+        ],
       },
     };
-    
+
     const updatedMoney: MoneyState = {
       ...money,
       bankBalance: newBankBalance,
       history: [...money.history, event],
     };
     saveMoneyState(updatedMoney);
-    
+
     setShowGoalReachedPopup(false);
     // Navigate to summary with completed flag
     router.push("/summary?completed=true");
@@ -537,6 +538,37 @@ export const Overworld: React.FC<OverworldProps> = ({
 
   const handleBusTravel = (destination: (typeof BUS_STOPS)[0]) => {
     if (!activeDoorId) return;
+
+    const BUS_FARE = 2.0;
+
+    if (money.balance < BUS_FARE) {
+      alert(
+        `The bus costs $${BUS_FARE.toFixed(2)}. You don't have enough money!`,
+      );
+      return;
+    }
+
+    // Deduct fare and log it
+    const newBalance = Math.round((money.balance - BUS_FARE) * 100) / 100;
+
+    const newBusEvent: ChoiceEvent = {
+      id: createEventId(),
+      encounterId: "bus_ride",
+      choice: "buy",
+      cost: BUS_FARE,
+      category: "need", // Transport is a need
+      deltas: {
+        balanceAfter: newBalance,
+        notes: [`Took the bus to ${destination.name}`],
+      },
+    };
+
+    const updatedMoney: MoneyState = {
+      ...money,
+      balance: newBalance,
+      history: [...money.history, newBusEvent],
+    };
+    saveMoneyState(updatedMoney);
 
     // 1. Set traveling state
     setIsTraveling(true);
