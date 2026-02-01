@@ -205,9 +205,6 @@ export const useRetroAudio = () => {
    }, []);
 
 
-    const startBackgroundMusic = useCallback(() => {
-        // Background music removed
-    }, []);
 
     const stopMusic = useCallback(() => {
         // Background music removed
@@ -225,7 +222,6 @@ export const useRetroAudio = () => {
         playInvestmentMade,
         playEnterBuilding,
         playSleep,
-        startBackgroundMusic,
         stopMusic
     };
 };
