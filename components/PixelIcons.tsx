@@ -69,7 +69,11 @@ export const CloseIcon = ({ className }: { className?: string }) => (
     <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12z" />
   </PixelIconWrapper>
 );
-
+export const PortfolioIcon = ({ className }: { className?: string }) => (
+  <PixelIconWrapper className={className}>
+    <path d="M3 3H21V21H3V3ZM5 5V19H19V5H5ZM7 11H9V17H7V11ZM11 7H13V17H11V7ZM15 13H17V17H15V13Z" />
+  </PixelIconWrapper>
+);
 export const SavingsIcon = ({ className }: { className?: string }) => (
   <PixelIconWrapper className={className}>
     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-2.75v-1.1h-2v.8c-1.1.25-2 .97-2 2.3 0 2.22 2.66 2.5 3.5 2.8.84.3 1.5.54 1.5 1.25 0 .61-.6 1.15-1.5 1.15s-1.5-.64-1.5-1.2h-2c0 1.54 1.24 2.59 2.5 2.75v1h2v-1c1.17-.22 2.5-1.02 2.5-2.55 0-2.22-2.75-2.45-3.5-2.75-.75-.3-1.5-.6-1.5-1.25 0-.61.64-1.15 1.5-1.15s1.46.64 1.54 1.2h2c0-1.29-.98-2.34-2.54-2.5z" /> 
@@ -128,5 +132,48 @@ export const MedicineIcon = ({ className }: { className?: string }) => (
 export const WalletIcon = ({ className }: { className?: string }) => (
     <PixelIconWrapper className={className}>
         <path d="M4 4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4H4ZM4 6H20V18H4V6ZM8 11H16V13H8V11Z" />
+    </PixelIconWrapper>
+);
+
+export const EtfIcon = ({ className }: { className?: string }) => (
+    <PixelIconWrapper className={className}>
+        <path d="M4 18V6H6V18H4ZM8 18V10H10V18H8ZM12 18V8H14V18H12ZM16 18V12H18V18H16ZM2 20H22V22H2V20Z" />
+    </PixelIconWrapper>
+);
+
+export const StockIcon = ({ className }: { className?: string }) => (
+    <PixelIconWrapper className={className}>
+        <path d="M3 3V21H21V19H5V3H3ZM7 15L11 11L15 15L19 7H15V9H16.2L15 11.4L11 7.4L7 11.4V15Z" />
+    </PixelIconWrapper>
+);
+
+export const BondIcon = ({ className }: { className?: string }) => (
+    <PixelIconWrapper className={className}>
+        <path d="M5 3H19C20.1 3 21 3.9 21 5V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V5C3 3.9 3.9 3 5 3ZM5 5V19H19V5H5ZM7 7H17V9H7V7ZM7 11H17V13H7V11ZM7 15H13V17H7V15ZM16 15H17V17H16V15Z" />
+    </PixelIconWrapper>
+);
+
+export const MineralsIcon = ({ className }: { className?: string }) => (
+    <PixelIconWrapper className={className}>
+        <path d="M12 2L4 8L7 20H17L20 8L12 2ZM12 5L17 9H7L12 5ZM7.5 10H16.5L14.5 18H9.5L7.5 10Z" />
+    </PixelIconWrapper>
+);
+
+export const CryptoIcon = ({ className }: { className?: string }) => (
+    <PixelIconWrapper className={className}>
+        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.58 20 4 16.42 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12C20 16.42 16.42 20 12 20ZM11 6H13V8H14C15.1 8 16 8.9 16 10V14C16 15.1 15.1 16 14 16H13V18H11V16H10V13H12V14H14V10H12V11H10V9C10 7.9 10.9 7 12 7V6Z" />
+    </PixelIconWrapper>
+);
+
+export const RealEstateIcon = ({ className }: { className?: string }) => (
+    <PixelIconWrapper className={className}>
+        <path d="M12 3L2 12H5V20H11V14H13V20H19V12H22L12 3ZM11 10C11 9.45 11.45 9 12 9C12.55 9 13 9.45 13 10V12H11V10Z" />
+    </PixelIconWrapper>
+);
+
+export const OptionsIcon = ({ className }: { className?: string }) => (
+    <PixelIconWrapper className={className}>
+        <path d="M4 12V20H20V12H4ZM2 8H22V10H2V8ZM10 2L12 4L14 2H10Z" />
+        <path d="M11 6H13V7H11V6Z" />
     </PixelIconWrapper>
 );

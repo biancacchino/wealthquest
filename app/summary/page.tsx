@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { loadGameState, saveGameState } from "../../lib/storage";
-import { GameState } from "../../lib/engine/types";
+import { getCurrentSession, saveUser, createInitialGameState } from "../../services/storage";
+import { GameState } from "../../types";
 
 // Compute stats from history - mirrors Overworld logic
 const computeStatsFromHistory = (history: any[], balance: number, goalCost: number) => {
@@ -62,51 +62,52 @@ export default function SummaryPage() {
   const [gameState, setGameState] = useState<GameState | null>(null);
 
   useEffect(() => {
-    const saved = loadGameState();
-    if (!saved) {
+    const user = getCurrentSession();
+    if (!user) {
       router.push("/");
       return;
     }
-    setGameState(saved);
+    setGameState(user.gameState);
   }, [router]);
 
   const summary = useMemo(() => {
     if (!gameState) return null;
-    const purchases = gameState.week.history.filter((event) => event.choice === "buy").length;
-    const skips = gameState.week.history.filter((event) => event.choice === "skip").length;
-    const recent = gameState.week.history.slice(-5).map((event) => ({
+    const history = gameState.money.history;
+    const purchases = history.filter((event) => event.choice === "buy").length;
+    const skips = history.filter((event) => event.choice === "skip").length;
+    
+    // Adaptation for current Type structure
+    const recent = history.slice(-5).map((event) => ({
       id: event.id,
-      day: event.dayIndex + 1,
+      day: 1, // Placeholder
       encounterId: event.encounterId,
-      choice: event.choice
+      choice: event.choice,
+      cost: event.cost,
+      balanceAfter: event.deltas.balanceAfter
     }));
-    
-    // Compute player stats
-    const stats = computeStatsFromHistory(
-      gameState.week.history, 
-      gameState.week.balance, 
-      gameState.settings.goal.cost
-    );
-    
-    return { purchases, skips, recent, stats };
+
+    // Re-calculate stats properly using the helper
+    const stats = computeStatsFromHistory(history, gameState.money.balance, gameState.money.goal.cost);
+
+    return {
+      purchases,
+      skips,
+      savings: gameState.money.bankBalance || 0,
+      recent,
+      stats
+    };
   }, [gameState]);
 
   const handleReplay = () => {
-    if (!gameState) return;
-    const resetState: GameState = {
-      ...gameState,
-      week: {
-        ...gameState.week,
-        dayIndex: 0,
-        balance: gameState.settings.weeklyAllowance,
-        goalSaved: 0,
-        history: [],
-        unlockedInsights: []
-      }
-    };
-    setGameState(resetState);
-    saveGameState(resetState);
-    router.push("/game");
+    const user = getCurrentSession();
+    if (!user) return;
+    
+    // Reset game state but keep username/character
+    const newState = createInitialGameState();
+    const updatedUser = { ...user, gameState: newState };
+    
+    saveUser(updatedUser);
+    router.push("/");
   };
 
   if (!gameState || !summary) {
@@ -121,7 +122,8 @@ export default function SummaryPage() {
           You chose {summary.purchases} purchase(s) and skipped {summary.skips} time(s).
         </p>
         <p>
-          Your goal is still ${gameState.settings.goal.cost - gameState.week.goalSaved} away.
+          You saved total ${summary.savings}.
+          Your goal needs ${gameState.money.goal.cost - (gameState.money.bankBalance || 0)} more.
         </p>
       </div>
 

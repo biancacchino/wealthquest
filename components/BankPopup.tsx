@@ -1,19 +1,21 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ChoiceEvent, BankTransaction } from "../types";
+import { ChoiceEvent, BankTransaction, InvestmentType } from "../types";
 import { 
   BankIcon, 
   SavingsIcon, 
   HistoryIcon, 
   DepositIcon, 
   WithdrawIcon, 
-  CloseIcon 
+  CloseIcon,
+  EtfIcon 
 } from "./PixelIcons";
 
 interface BankPopupProps {
   cashBalance: number;
   bankBalance: number;
+  portfolio?: Record<InvestmentType, number>;
   history: Array<ChoiceEvent | BankTransaction>; // Combined history
   onDeposit: (amount: number) => void;
   onWithdraw: (amount: number) => void;
@@ -23,6 +25,7 @@ interface BankPopupProps {
 export const BankPopup: React.FC<BankPopupProps> = ({
   cashBalance,
   bankBalance,
+  portfolio,
   history,
   onDeposit,
   onWithdraw,
@@ -157,7 +160,7 @@ export const BankPopup: React.FC<BankPopupProps> = ({
   return (
     <div className="fixed inset-0 z-30 bg-black/80 flex items-center justify-center p-4">
       <div
-        className="w-full max-w-2xl relative flex flex-col max-h-[90vh]"
+        className="w-full max-w-lg relative flex flex-col max-h-[85vh]"
         style={{
           backgroundColor: "#d4e4bc",
           border: "4px solid #4a5c3a",
@@ -178,7 +181,7 @@ export const BankPopup: React.FC<BankPopupProps> = ({
           <div className="flex items-center gap-3">
             <BankIcon className="text-[#eff7d9]" />
             <span className="text-[#eff7d9] text-base font-bold tracking-widest uppercase text-shadow-sm">
-              Pixel Bank
+              BANK
             </span>
           </div>
           <button
@@ -201,6 +204,19 @@ export const BankPopup: React.FC<BankPopupProps> = ({
                     </div>
                     <div className="text-[#eff7d9] text-[8px] mt-1">Interest: 1.25%</div>
                 </div>
+
+                {/* Investment Summary */}
+                {portfolio && (
+                    <div className="bg-[#1e293b] p-4 rounded border-2 border-[#475569] text-center mb-4">
+                        <div className="text-gray-400 text-[8px] uppercase mb-1">Total Investments</div>
+                        <div className="text-[#60a5fa] text-xs font-bold text-shadow-blue break-words">
+                            ${Object.values(portfolio).reduce((a, b) => a + b, 0).toLocaleString()}
+                        </div>
+                        <div className="text-gray-500 text-[8px] mt-1 flex justify-center items-center gap-1">
+                             <EtfIcon className="w-3 h-3" /> View at NYSE
+                        </div>
+                    </div>
+                )}
 
                 <div className="flex flex-col gap-2">
                     <button

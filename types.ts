@@ -53,9 +53,13 @@ export interface BankTransaction {
   balanceAfter: number;
 }
 
+export type InvestmentType = 'etf' | 'stocks' | 'bonds' | 'minerals' | 'crypto' | 'real_estate' | 'options';
+
 export interface MoneyState {
   balance: number;
   bankBalance: number;
+  portfolio: Record<InvestmentType, number>;
+  marketTrends: Record<InvestmentType, number[]>;
   goal: MoneyGoal;
   history: ChoiceEvent[];
   bankHistory: BankTransaction[];
