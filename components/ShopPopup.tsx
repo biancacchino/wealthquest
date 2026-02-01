@@ -15,6 +15,7 @@ interface ShopPopupProps {
   title: string;
   items: ShopItem[];
   userBalance: number;
+  bankBalance?: number;
   onPurchase: (itemId: string, itemName: string, price: number, category?: 'need' | 'want' | 'social') => void;
   onCancel: () => void;
   imagePath?: string;
@@ -25,6 +26,7 @@ export const ShopPopup: React.FC<ShopPopupProps> = ({
   title,
   items,
   userBalance,
+  bankBalance = 0,
   onPurchase,
   onCancel,
   imagePath,
@@ -42,6 +44,48 @@ export const ShopPopup: React.FC<ShopPopupProps> = ({
       onPurchase(selectedItem.id, selectedItem.name, selectedItem.price, selectedItem.category || 'want');
       setSelectedItemId(null);
     }
+  };
+
+  // Helper to render educational messages
+  const renderBalanceMessage = () => {
+    if (!selectedItem) return null;
+    
+    const remaining = userBalance - selectedItem.price;
+    const canAfford = userBalance >= selectedItem.price;
+    const wouldSpendAll = canAfford && remaining === 0;
+    const wouldLeaveLittle = canAfford && remaining > 0 && remaining < 5;
+    const hasSavingsToHelp = !canAfford && bankBalance > 0 && (userBalance + bankBalance) >= selectedItem.price;
+    const cantAffordAtAll = !canAfford && !hasSavingsToHelp;
+
+    return (
+      <div className="text-[10px] mt-2" style={{ color: "#6b7280" }}>
+        {canAfford && (
+          <>
+            💡 After purchase: ${remaining.toFixed(2)} remaining
+            {wouldSpendAll && (
+              <div className="text-orange-600 mt-1 font-bold">
+                ⚠️ This would use ALL your cash! Keep some money in your pocket for emergencies.
+              </div>
+            )}
+            {wouldLeaveLittle && (
+              <div className="text-yellow-600 mt-1 font-bold">
+                ⚠️ Keep some money for unexpected needs!
+              </div>
+            )}
+          </>
+        )}
+        {hasSavingsToHelp && (
+          <div className="text-amber-600 mt-1 font-bold">
+            💰 Not enough cash! You have ${bankBalance.toFixed(2)} in savings at the bank — but remember, dipping into savings delays your goal.
+          </div>
+        )}
+        {cantAffordAtAll && (
+          <div className="text-red-500 mt-1 font-bold">
+            ❌ Not enough money for this item.
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -219,16 +263,7 @@ export const ShopPopup: React.FC<ShopPopupProps> = ({
                 <div className="text-xs font-bold" style={{ color: "#3a7a98" }}>
                   Your balance: ${userBalance.toFixed(2)}
                 </div>
-                {selectedItem && (
-                  <div className="text-[10px] mt-2" style={{ color: "#6b7280" }}>
-                    💡 After purchase: ${Math.max(0, userBalance - selectedItem.price).toFixed(2)} remaining
-                    {userBalance - selectedItem.price < 5 && userBalance >= selectedItem.price && (
-                      <div className="text-yellow-600 mt-1 font-bold">
-                        ⚠️ Keep some money for unexpected needs!
-                      </div>
-                    )}
-                  </div>
-                )}
+                {renderBalanceMessage()}
               </div>
             </div>
           </div>

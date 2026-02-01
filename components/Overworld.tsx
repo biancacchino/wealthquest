@@ -778,6 +778,7 @@ export const Overworld: React.FC<OverworldProps> = ({
           title={activeEncounter.title}
           items={activeEncounter.shopItems}
           userBalance={money.balance}
+          bankBalance={money.bankBalance}
           onPurchase={handleShopPurchase}
           onCancel={closeEncounter}
         />
@@ -789,6 +790,7 @@ export const Overworld: React.FC<OverworldProps> = ({
           title="Market"
           items={MARKET_SHOP_ITEMS}
           userBalance={money.balance}
+          bankBalance={money.bankBalance}
           onPurchase={handleShopPurchase}
           onCancel={closeDoor}
         />
@@ -800,6 +802,7 @@ export const Overworld: React.FC<OverworldProps> = ({
           title="Coffee Shop"
           items={COFFEE_SHOP_ITEMS}
           userBalance={money.balance}
+          bankBalance={money.bankBalance}
           onPurchase={handleShopPurchase}
           onCancel={closeDoor}
           imagePath={"/assets/ui/coffee-bar.png"}
@@ -812,6 +815,7 @@ export const Overworld: React.FC<OverworldProps> = ({
           title="Mall"
           items={MALL_SHOP_ITEMS}
           userBalance={money.balance}
+          bankBalance={money.bankBalance}
           onPurchase={handleShopPurchase}
           onCancel={closeDoor}
         />
@@ -823,6 +827,7 @@ export const Overworld: React.FC<OverworldProps> = ({
           title="Movies"
           items={MOVIES_SHOP_ITEMS}
           userBalance={money.balance}
+          bankBalance={money.bankBalance}
           onPurchase={handleShopPurchase}
           onCancel={closeDoor}
         />
@@ -834,6 +839,7 @@ export const Overworld: React.FC<OverworldProps> = ({
           title="Arcade"
           items={ARCADE_SHOP_ITEMS}
           userBalance={money.balance}
+          bankBalance={money.bankBalance}
           onPurchase={handleShopPurchase}
           onCancel={closeDoor}
         />
@@ -845,6 +851,7 @@ export const Overworld: React.FC<OverworldProps> = ({
           title="Pizza Shop"
           items={PIZZA_SHOP_ITEMS}
           userBalance={money.balance}
+          bankBalance={money.bankBalance}
           onPurchase={handleShopPurchase}
           onCancel={closeDoor}
         />

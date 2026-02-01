@@ -15,6 +15,7 @@ interface PizzaPopupProps {
   title: string;
   items: PizzaItem[];
   userBalance: number;
+  bankBalance?: number;
   onPurchase: (itemId: string, itemName: string, price: number, category?: EncounterCategory) => void;
   onCancel: () => void;
 }
@@ -23,6 +24,7 @@ export const PizzaPopup: React.FC<PizzaPopupProps> = ({
   title,
   items,
   userBalance,
+  bankBalance = 0,
   onPurchase,
   onCancel,
 }) => {
@@ -38,6 +40,51 @@ export const PizzaPopup: React.FC<PizzaPopupProps> = ({
       onPurchase(selectedItem.id, selectedItem.name, selectedItem.price, selectedItem.category || 'want');
       setSelectedItemId(null);
     }
+  };
+
+  // Render educational balance messages
+  const renderBalanceMessage = () => {
+    if (!selectedItem) return null;
+    
+    const afterPurchase = userBalance - selectedItem.price;
+    const cantAfford = userBalance < selectedItem.price;
+    const wouldSpendAll = afterPurchase === 0;
+    const wouldLeaveLittle = afterPurchase > 0 && afterPurchase < 5;
+    const hasSavingsToHelp = bankBalance > 0 && cantAfford && (userBalance + bankBalance) >= selectedItem.price;
+    
+    if (cantAfford && hasSavingsToHelp) {
+      return (
+        <div className="text-amber-600 mt-2 text-[10px] font-bold">
+          💡 You have ${bankBalance.toFixed(2)} in savings! But remember: savings are for your future goals. Is this purchase worth dipping into them?
+        </div>
+      );
+    }
+    
+    if (cantAfford) {
+      return (
+        <div className="text-red-600 mt-2 text-[10px] font-bold">
+          ❌ You can&apos;t afford this right now. Keep saving!
+        </div>
+      );
+    }
+    
+    if (wouldSpendAll) {
+      return (
+        <div className="text-orange-600 mt-2 text-[10px] font-bold">
+          ⚠️ This would use ALL your cash! Always keep some money for emergencies.
+        </div>
+      );
+    }
+    
+    if (wouldLeaveLittle) {
+      return (
+        <div className="text-yellow-600 mt-2 text-[10px] font-bold">
+          💭 This would leave you with only ${afterPurchase.toFixed(2)}. Budget carefully!
+        </div>
+      );
+    }
+    
+    return null;
   };
 
   // Get category badge color and label
@@ -236,6 +283,7 @@ export const PizzaPopup: React.FC<PizzaPopupProps> = ({
                     )}
                   </div>
                 )}
+                {renderBalanceMessage()}
               </div>
             </div>
           </div>
