@@ -8,7 +8,13 @@ import React, {
   useState,
 } from "react";
 import type Phaser from "phaser";
-import { UserProfile, MoneyState, ChoiceEvent, PlayerStats, EncounterCategory } from "../types";
+import {
+  UserProfile,
+  MoneyState,
+  ChoiceEvent,
+  PlayerStats,
+  EncounterCategory,
+} from "../types";
 import { clearSession, saveUser } from "../services/storage";
 import { RetroBox } from "./RetroBox";
 import { PhaserGame } from "./PhaserGame";
@@ -18,21 +24,22 @@ import { MONEY_GOALS } from "../constants";
 import { ShopPopup } from "./ShopPopup";
 import { BankPopup } from "./BankPopup";
 import { CoffeePopup } from "./CoffeePopup";
+import { LibraryPopup } from "./LibraryPopup";
 import { COFFEE_SHOP_ITEMS } from "../constants";
-import { 
-  BusIcon, 
-  MovieIcon, 
-  PizzaIcon, 
-  HomeIcon, 
-  CoffeeIcon, 
-  BankIcon, 
-  ArcadeIcon, 
+import {
+  BusIcon,
+  MovieIcon,
+  PizzaIcon,
+  HomeIcon,
+  CoffeeIcon,
+  BankIcon,
+  ArcadeIcon,
   MallIcon,
   BreadIcon,
   MilkIcon,
   FruitIcon,
   EggIcon,
-  MedicineIcon
+  MedicineIcon,
 } from "./PixelIcons";
 
 // Mapping of Door IDs to display names
@@ -91,17 +98,47 @@ const BUS_STOPS = [
 
 // Market shop items
 const MARKET_SHOP_ITEMS = [
-  { id: "bread", name: "Bread", price: 2.0, Icon: BreadIcon, category: 'need' as EncounterCategory },
-  { id: "milk", name: "Milk", price: 1.5, Icon: MilkIcon, category: 'need' as EncounterCategory },
-  { id: "fruit", name: "Fruit", price: 2.5, Icon: FruitIcon, category: 'need' as EncounterCategory },
-  { id: "eggs", name: "Eggs", price: 1.8, Icon: EggIcon, category: 'need' as EncounterCategory },
-  { id: "medicine", name: "Medicine", price: 5.0, Icon: MedicineIcon, category: 'need' as EncounterCategory },
+  {
+    id: "bread",
+    name: "Bread",
+    price: 2.0,
+    Icon: BreadIcon,
+    category: "need" as EncounterCategory,
+  },
+  {
+    id: "milk",
+    name: "Milk",
+    price: 1.5,
+    Icon: MilkIcon,
+    category: "need" as EncounterCategory,
+  },
+  {
+    id: "fruit",
+    name: "Fruit",
+    price: 2.5,
+    Icon: FruitIcon,
+    category: "need" as EncounterCategory,
+  },
+  {
+    id: "eggs",
+    name: "Eggs",
+    price: 1.8,
+    Icon: EggIcon,
+    category: "need" as EncounterCategory,
+  },
+  {
+    id: "medicine",
+    name: "Medicine",
+    price: 5.0,
+    Icon: MedicineIcon,
+    category: "need" as EncounterCategory,
+  },
 ];
 
 // Compute player stats from money state - reflects Wealthsimple's tone of insights, not scores
 const computeStats = (money: MoneyState): PlayerStats => {
   const history = money.history;
-  
+
   // Base stats when no history
   if (history.length === 0) {
     return {
@@ -112,57 +149,60 @@ const computeStats = (money: MoneyState): PlayerStats => {
 
   // --- Future Preparedness ---
   // Measures: goal progress, skip ratio (delayed gratification), balance buffer
-  
+
   // Total balance for calculations (cash on hand + bank savings)
   const totalBalance = money.balance + (money.bankBalance || 0);
-  
+
   // Goal progress (0-100): How close to achieving the goal (based on bank savings)
   const safeSavings = money.bankBalance || 0;
   const goalProgress = Math.min(100, (safeSavings / money.goal.cost) * 100);
-  
+
   // Skip ratio (0-100): Higher skips = better delayed gratification
   const totalChoices = history.length;
-  const skips = history.filter(e => e.choice === 'skip').length;
+  const skips = history.filter((e) => e.choice === "skip").length;
   const skipRatio = totalChoices > 0 ? (skips / totalChoices) * 100 : 50;
-  
+
   // Buffer score (0-100): Having money above $0 shows emergency mindset
   // $25+ buffer = 100%, $0 = 0%
   const bufferScore = Math.min(100, (totalBalance / 25) * 100);
-  
+
   // Weighted calculation for Future Preparedness
   const futurePreparedness = Math.round(
-    (goalProgress * 0.5) + (skipRatio * 0.3) + (bufferScore * 0.2)
+    goalProgress * 0.5 + skipRatio * 0.3 + bufferScore * 0.2,
   );
 
   // --- Financial Mindfulness ---
   // Measures: needs vs wants ratio, balanced decisions, variety of choices
-  
+
   // Needs ratio (0-100): Higher when buying needs over wants
-  const purchases = history.filter(e => e.choice === 'buy');
-  const needPurchases = purchases.filter(e => e.category === 'need').length;
-  const wantPurchases = purchases.filter(e => e.category === 'want').length;
-  const socialPurchases = purchases.filter(e => e.category === 'social').length;
-  
+  const purchases = history.filter((e) => e.choice === "buy");
+  const needPurchases = purchases.filter((e) => e.category === "need").length;
+  const wantPurchases = purchases.filter((e) => e.category === "want").length;
+  const socialPurchases = purchases.filter(
+    (e) => e.category === "social",
+  ).length;
+
   // Needs are good, social is neutral, pure wants lower the score
   let needsScore = 50;
   if (purchases.length > 0) {
     // Needs = +1, Social = +0.5, Wants = 0
-    const weightedSum = (needPurchases * 1) + (socialPurchases * 0.5) + (wantPurchases * 0);
+    const weightedSum =
+      needPurchases * 1 + socialPurchases * 0.5 + wantPurchases * 0;
     needsScore = Math.min(100, (weightedSum / purchases.length) * 100);
   }
-  
+
   // Balanced decisions (0-100): Not always buying OR always skipping shows thoughtfulness
   // Perfect balance (50/50) = 100, all one way = lower
-  const buyRatio = totalChoices > 0 ? (purchases.length / totalChoices) : 0.5;
+  const buyRatio = totalChoices > 0 ? purchases.length / totalChoices : 0.5;
   const balanceScore = 100 - Math.abs(buyRatio - 0.5) * 200; // 50/50 = 100, 100/0 = 0
-  
+
   // Variety score (0-100): Engaging with different encounter types
-  const uniqueEncounters = new Set(history.map(e => e.encounterId)).size;
+  const uniqueEncounters = new Set(history.map((e) => e.encounterId)).size;
   const varietyScore = Math.min(100, (uniqueEncounters / 3) * 100); // 3 encounter types = max
-  
+
   // Weighted calculation for Financial Mindfulness
   const financialMindfulness = Math.round(
-    (needsScore * 0.4) + (balanceScore * 0.4) + (varietyScore * 0.2)
+    needsScore * 0.4 + balanceScore * 0.4 + varietyScore * 0.2,
   );
 
   return {
@@ -187,6 +227,7 @@ export const Overworld: React.FC<OverworldProps> = ({
   const [activeDoorId, setActiveDoorId] = useState<string | null>(null);
   const [showShop, setShowShop] = useState(false);
   const [showBank, setShowBank] = useState(false);
+  const [showLibraryMenu, setShowLibraryMenu] = useState(false);
   const [modalStep, setModalStep] = useState<"choice" | "preview" | "result">(
     "choice",
   );
@@ -242,18 +283,18 @@ export const Overworld: React.FC<OverworldProps> = ({
 
   const handleEncounter = useCallback(
     (encounterId: string) => {
-    // Check if it's a door (including market)
-    if (DOOR_MAPPING[encounterId]) {
-      setActiveDoorId(encounterId);
-      setMovementLocked(true);
-      // For market door, do NOT show shop immediately; wait for confirmation
-      return;
-    }
+      // Check if it's a door (including market)
+      if (DOOR_MAPPING[encounterId]) {
+        setActiveDoorId(encounterId);
+        setMovementLocked(true);
+        // For market door, do NOT show shop immediately; wait for confirmation
+        return;
+      }
 
-    // Otherwise handle as normal shop encounter
-    setActiveEncounterId(encounterId);
-    setShowShop(true);
-    setMovementLocked(true);
+      // Otherwise handle as normal shop encounter
+      setActiveEncounterId(encounterId);
+      setShowShop(true);
+      setMovementLocked(true);
     },
     [setMovementLocked],
   );
@@ -276,6 +317,7 @@ export const Overworld: React.FC<OverworldProps> = ({
   const closeDoor = (skipPushback = false) => {
     setActiveDoorId(null);
     setShowShop(false);
+    setShowLibraryMenu(false);
     setMovementLocked(false);
 
     if (!skipPushback) {
@@ -292,6 +334,11 @@ export const Overworld: React.FC<OverworldProps> = ({
       notifyDecision(activeDoorId, "yes");
     }
 
+    if (activeDoorId === "DOOR_LIBRARY") {
+      setShowLibraryMenu(true);
+      return;
+    }
+
     // Check if it's a shop door
     if (activeDoorId === "DOOR_MARKET" || activeDoorId === "DOOR_MALL") {
       setShowShop(true);
@@ -299,9 +346,9 @@ export const Overworld: React.FC<OverworldProps> = ({
       return;
     }
     // Handle Work building - earn random $15-$20 with cooldown
-    if (activeDoorId === 'DOOR_WORK') {
+    if (activeDoorId === "DOOR_WORK") {
       const now = Date.now();
-      
+
       // Check if still on cooldown
       if (now < workCooldownEnd) {
         const secondsLeft = Math.ceil((workCooldownEnd - now) / 1000);
@@ -309,26 +356,30 @@ export const Overworld: React.FC<OverworldProps> = ({
         closeDoor();
         return;
       }
-      
+
       // Earn money and start 20 second cooldown
       const earned = Math.floor(Math.random() * 6) + 15; // 15-20 inclusive
-      earnMoney(earned, 'work');
+      earnMoney(earned, "work");
       setWorkEarnings(earned);
       setWorkCooldownEnd(now + 20000);
       return;
     }
 
     // Handle Bank
-    if (activeDoorId === 'DOOR_BANK') {
-        setShowBank(true);
-        return;
+    if (activeDoorId === "DOOR_BANK") {
+      setShowBank(true);
+      return;
     }
 
     // Handle Shops
-    if (activeDoorId === 'DOOR_MARKET' || activeDoorId === 'DOOR_MALL' || activeDoorId === 'DOOR_COFFEE') {
-        setShowShop(true);
-        // Do not close door yet, shop is an overlay
-        return;
+    if (
+      activeDoorId === "DOOR_MARKET" ||
+      activeDoorId === "DOOR_MALL" ||
+      activeDoorId === "DOOR_COFFEE"
+    ) {
+      setShowShop(true);
+      // Do not close door yet, shop is an overlay
+      return;
     }
 
     // TODO: Navigate to building Scene or Page
@@ -351,11 +402,11 @@ export const Overworld: React.FC<OverworldProps> = ({
       const world = gameRef.current?.scene?.getScene("World") as any;
       if (world && world.teleportPlayer) {
         world.teleportPlayer(destination.x, destination.y);
-        
+
         // Also set cooldown on destination so we don't trigger it immediately upon arrival
         if (world.handleDoorDecision) {
-           // Treat destination as "visited" so it has a cooldown
-           world.handleDoorDecision(destination.id, 'yes');
+          // Treat destination as "visited" so it has a cooldown
+          world.handleDoorDecision(destination.id, "yes");
         }
       }
 
@@ -385,8 +436,9 @@ export const Overworld: React.FC<OverworldProps> = ({
   ) => {
     // Round to 2 decimal places to avoid floating point issues
     // Deduct from balance (money on hand)
-    const newBalance = Math.round(Math.max(0, money.balance - price) * 100) / 100;
-    
+    const newBalance =
+      Math.round(Math.max(0, money.balance - price) * 100) / 100;
+
     const updatedMoney: MoneyState = {
       ...money,
       balance: newBalance,
@@ -397,7 +449,7 @@ export const Overworld: React.FC<OverworldProps> = ({
     if (activeEncounterId) {
       markEncounterComplete(activeEncounterId);
       closeEncounter();
-    } 
+    }
     // Handle door-based shop (Market, Mall)
     else if (activeDoorId) {
       setShowShop(false);
@@ -437,8 +489,9 @@ export const Overworld: React.FC<OverworldProps> = ({
   const depositToBank = (amount: number) => {
     const depositAmount = Math.min(amount, money.balance);
     if (depositAmount <= 0) return;
-    
-    const newBankBalance = Math.round(((money.bankBalance || 0) + depositAmount) * 100) / 100;
+
+    const newBankBalance =
+      Math.round(((money.bankBalance || 0) + depositAmount) * 100) / 100;
     const updatedMoney: MoneyState = {
       ...money,
       balance: Math.round((money.balance - depositAmount) * 100) / 100,
@@ -447,12 +500,12 @@ export const Overworld: React.FC<OverworldProps> = ({
         ...(money.bankHistory || []),
         {
           id: createEventId(),
-          type: 'deposit',
+          type: "deposit",
           amount: depositAmount,
           date: new Date().toISOString(),
-          balanceAfter: newBankBalance
-        }
-      ]
+          balanceAfter: newBankBalance,
+        },
+      ],
     };
     saveMoneyState(updatedMoney);
   };
@@ -461,19 +514,19 @@ export const Overworld: React.FC<OverworldProps> = ({
     if (amount > money.balance) return;
     const newBankBalance = (money.bankBalance || 0) + amount;
     const updatedMoney: MoneyState = {
-        ...money,
-        balance: money.balance - amount,
-        bankBalance: newBankBalance,
-        bankHistory: [
-          ...(money.bankHistory || []),
-          {
-            id: createEventId(),
-            type: 'deposit',
-            amount,
-            date: new Date().toISOString(),
-            balanceAfter: newBankBalance
-          }
-        ]
+      ...money,
+      balance: money.balance - amount,
+      bankBalance: newBankBalance,
+      bankHistory: [
+        ...(money.bankHistory || []),
+        {
+          id: createEventId(),
+          type: "deposit",
+          amount,
+          date: new Date().toISOString(),
+          balanceAfter: newBankBalance,
+        },
+      ],
     };
     saveMoneyState(updatedMoney);
   };
@@ -482,19 +535,19 @@ export const Overworld: React.FC<OverworldProps> = ({
     if (amount > (money.bankBalance || 0)) return;
     const newBankBalance = (money.bankBalance || 0) - amount;
     const updatedMoney: MoneyState = {
-        ...money,
-        balance: money.balance + amount,
-        bankBalance: newBankBalance,
-        bankHistory: [
-          ...(money.bankHistory || []),
-          {
-            id: createEventId(),
-            type: 'withdraw',
-            amount,
-            date: new Date().toISOString(),
-            balanceAfter: newBankBalance
-          }
-        ]
+      ...money,
+      balance: money.balance + amount,
+      bankBalance: newBankBalance,
+      bankHistory: [
+        ...(money.bankHistory || []),
+        {
+          id: createEventId(),
+          type: "withdraw",
+          amount,
+          date: new Date().toISOString(),
+          balanceAfter: newBankBalance,
+        },
+      ],
     };
     saveMoneyState(updatedMoney);
   };
@@ -539,8 +592,8 @@ export const Overworld: React.FC<OverworldProps> = ({
   return (
     <div className="flex flex-col min-h-screen bg-[#0b0f19] text-white relative overflow-hidden">
       {/* Money HUD - positioned in top right */}
-      <MoneyHUD 
-        money={money} 
+      <MoneyHUD
+        money={money}
         stats={playerStats}
         onGoalClick={() => setShowGoalPicker(true)}
         className="absolute top-4 right-4 z-20"
@@ -554,40 +607,45 @@ export const Overworld: React.FC<OverworldProps> = ({
         />
       </div>
 
-      {activeDoorId && !activeDoorId.includes("DOOR_BUS") && (
-        <div className="absolute inset-0 z-20 bg-black/70 flex items-center justify-center p-4">
-          <RetroBox
-            title={DOOR_MAPPING[activeDoorId] || activeDoorId}
-            className="max-w-sm w-full text-black"
-          >
-            <div className="space-y-6 text-center">
-              <p className="text-sm">
-                Would you like to enter{" "}
-                <strong>{DOOR_MAPPING[activeDoorId] || activeDoorId}</strong>?
-              </p>
+      {activeDoorId &&
+        !activeDoorId.includes("DOOR_BUS") &&
+        !showLibraryMenu && (
+          <div className="absolute inset-0 z-20 bg-black/70 flex items-center justify-center p-4">
+            <RetroBox
+              title={DOOR_MAPPING[activeDoorId] || activeDoorId}
+              className="max-w-sm w-full text-black"
+            >
+              <div className="space-y-6 text-center">
+                <p className="text-sm">
+                  Would you like to enter{" "}
+                  <strong>{DOOR_MAPPING[activeDoorId] || activeDoorId}</strong>?
+                </p>
 
-              <div className="flex flex-col gap-2">
-                <button
-                  onClick={enterBuilding}
-                  className="bg-green-600 hover:bg-green-500 text-white p-3 uppercase text-xs font-bold border-2 border-black transition-colors"
-                >
-                  Yes, Enter
-                </button>
-                <button
-                  onClick={() => {
-                    if (activeDoorId) notifyDecision(activeDoorId, "no");
-                    closeDoor();
-                  }}
-                  className="bg-red-600 hover:bg-red-500 text-white p-3 uppercase text-xs font-bold border-2 border-black transition-colors"
-                >
-                  No, Stay Outside
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={enterBuilding}
+                    className="bg-green-600 hover:bg-green-500 text-white p-3 uppercase text-xs font-bold border-2 border-black transition-colors"
+                  >
+                    Yes, Enter
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (activeDoorId) notifyDecision(activeDoorId, "no");
+                      closeDoor();
+                    }}
+                    className="bg-red-600 hover:bg-red-500 text-white p-3 uppercase text-xs font-bold border-2 border-black transition-colors"
+                  >
+                    No, Stay Outside
+                  </button>
+                </div>
               </div>
-            </div>
-          </RetroBox>
-        </div>
-      )}
-        {activeDoorId && !activeDoorId.includes("DOOR_BUS") && !showShop && (
+            </RetroBox>
+          </div>
+        )}
+      {activeDoorId &&
+        !activeDoorId.includes("DOOR_BUS") &&
+        !showShop &&
+        !showLibraryMenu && (
           <div className="absolute inset-0 z-20 bg-black/70 flex items-center justify-center p-4">
             <RetroBox
               title={DOOR_MAPPING[activeDoorId] || activeDoorId}
@@ -762,6 +820,15 @@ export const Overworld: React.FC<OverworldProps> = ({
         />
       )}
 
+      {showLibraryMenu && activeDoorId === "DOOR_LIBRARY" && (
+        <LibraryPopup
+          onClose={() => {
+            setShowLibraryMenu(false);
+            closeDoor();
+          }}
+        />
+      )}
+
       {/* GOAL PICKER MODAL */}
       {showGoalPicker && (
         <div className="absolute inset-0 z-30 bg-black/70 flex items-center justify-center p-4">
@@ -841,7 +908,7 @@ export const Overworld: React.FC<OverworldProps> = ({
                     >
                       <div className="p-3">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm">
+                          <span className="text-sm text-slate-900">
                             {goal.emoji} {goal.label}
                           </span>
                           <span className="text-xs text-gray-600 font-bold">
@@ -919,7 +986,8 @@ export const Overworld: React.FC<OverworldProps> = ({
               backgroundColor: "#9ccce8",
               border: "4px solid #5a98b8",
               borderRadius: "8px",
-              boxShadow: "inset 2px 2px 0 #b8e0f0, inset -2px -2px 0 #4888a8, 8px 8px 0 rgba(0,0,0,0.3)",
+              boxShadow:
+                "inset 2px 2px 0 #b8e0f0, inset -2px -2px 0 #4888a8, 8px 8px 0 rgba(0,0,0,0.3)",
               fontFamily: '"Press Start 2P", monospace',
             }}
           >
@@ -931,12 +999,16 @@ export const Overworld: React.FC<OverworldProps> = ({
                 borderBottom: "2px solid #4888a8",
               }}
             >
-              <span className="text-white text-xs font-bold">💼 Work Complete!</span>
+              <span className="text-white text-xs font-bold">
+                💼 Work Complete!
+              </span>
             </div>
             <div className="p-6 space-y-4">
               <div className="text-4xl">💰</div>
               <p className="text-sm text-gray-700">Great job! You earned:</p>
-              <p className="text-2xl font-bold text-green-600">${workEarnings}</p>
+              <p className="text-2xl font-bold text-green-600">
+                ${workEarnings}
+              </p>
               <p className="text-[10px] text-gray-500">
                 New cash balance: ${money.balance.toFixed(2)}
               </p>
@@ -989,10 +1061,10 @@ const ensureMoneyState = (moneyState?: MoneyState): MoneyState => {
     const oldCash = (moneyState as any).cash;
     const oldBank = (moneyState as any).bank;
     const oldTfsa = (moneyState as any).tfsa;
-    
+
     return {
       balance: moneyState.balance ?? oldCash ?? 25,
-      bankBalance: moneyState.bankBalance ?? ((oldBank ?? 0) + (oldTfsa ?? 0)),
+      bankBalance: moneyState.bankBalance ?? (oldBank ?? 0) + (oldTfsa ?? 0),
       goal: moneyState.goal,
       history: moneyState.history || [],
       bankHistory: moneyState.bankHistory || [],
