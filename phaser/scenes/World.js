@@ -81,21 +81,7 @@ export class World extends Phaser.Scene {
         this.handleDoorOverlap(door.name);
     });
 
-    // Encounter markers (Visual only now, or could convert to triggers too)
-    this.encounterMarkers = ENCOUNTERS.map((encounter) => {
-      const marker = this.add.rectangle(
-        encounter.tile.x * tileSize + tileSize / 2,
-        encounter.tile.y * tileSize + tileSize / 2,
-        tileSize - 6,
-        tileSize - 6,
-        0x4ade80,
-        0.6
-      );
-      marker.setStrokeStyle(2, 0x14532d, 0.8);
-      // Optional: Add physics to encounters if you want them to be triggers too
-      // this.physics.add.existing(marker, true);
-      return { id: encounter.id, marker };
-    });
+
 
     // Set camera bounds to the world size
     this.cameras.main.setBounds(0, 0, this.mapWidthPx, this.mapHeightPx);
