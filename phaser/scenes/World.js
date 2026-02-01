@@ -20,6 +20,7 @@ export class World extends Phaser.Scene {
     this.isMovementLocked = false;
     this.doorCooldowns = new Map();
     this.ignoreTriggersUntil = 0;
+    this.lastFootstepTime = 0;
   }
 
   preload() {
@@ -108,25 +109,6 @@ export class World extends Phaser.Scene {
     // Movement speed (pixels per frame -> velocity)
     // used to be 4 per frame, for physics velocity we need higher values (e.g. 150-200)
     this.moveSpeed = 200; 
-
-    // Add UI text (fixed to camera)
-    this.add.text(10, 10, 'Use WASD to move', {
-      fontSize: '40px', // Zoomed out fix
-      fill: '#fff'
-    }).setScrollFactor(0); // Fixed to camera
-    
-    // Debug: show map size
-    this.add.text(10, 60, `Map: ${this.mapWidthPx}x${this.mapHeightPx}px`, {
-      fontSize: '30px', // Zoomed out fix
-      fill: '#888'
-    }).setScrollFactor(0);
-
-    // Debug: show player position
-    this.debugText = this.add.text(10, 100, '', {
-        fontSize: '40px', // Zoomed out fix
-        fill: '#00ff00',
-        backgroundColor: '#000000'
-    }).setScrollFactor(0);
 
     // Track door interaction
     this.currentOverlappingDoor = null;
@@ -401,15 +383,19 @@ export class World extends Phaser.Scene {
       
       // Check for encounters at current tile
       this.checkEncounterAt(tileX, tileY);
+
+      // Play footstep sound
+      if (this.time.now - this.lastFootstepTime > 350) {
+          const callbacks = this.registry.get('callbacks');
+          if (callbacks && typeof callbacks.onFootstep === 'function') {
+              callbacks.onFootstep();
+          }
+          this.lastFootstepTime = this.time.now;
+      }
     } else {
         // Stop moving and play idle animation
         this.player.setVelocity(0, 0);
         this.player.playIdleAnimation();
-    }
-
-    // Update debug text with player position
-    if (this.debugText && this.player && this.player.sprite) {
-        this.debugText.setText(`x: ${Math.round(this.player.sprite.x)}, y: ${Math.round(this.player.sprite.y)}`);
     }
 
     // Reset overlap if player left the zone

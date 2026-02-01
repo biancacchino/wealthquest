@@ -177,3 +177,63 @@ export const OptionsIcon = ({ className }: { className?: string }) => (
         <path d="M11 6H13V7H11V6Z" />
     </PixelIconWrapper>
 );
+
+export const BookIcon = ({ className }: { className?: string }) => (
+  <PixelIconWrapper className={className}>
+    <path d="M6 4h10v16H6V4zm2 2v12h6V6H8z" />
+  </PixelIconWrapper>
+);
+
+export const ShirtIcon = ({ className }: { className?: string }) => (
+  <PixelIconWrapper className={className}>
+    <path d="M12 2l-4 4h2v14h4V6h2L12 2zm-6 6v2h2v-2H6zm10 0v2h2v-2h-2z" />
+  </PixelIconWrapper>
+);
+
+export const ShoeIcon = ({ className }: { className?: string }) => (
+  <PixelIconWrapper className={className}>
+    <path d="M4 14v6h16v-4l-4-4h-4l-4 4v-2H4z" />
+  </PixelIconWrapper>
+);
+
+export const GameIcon = ({ className }: { className?: string }) => (
+  <PixelIconWrapper className={className}>
+    <path d="M2 8v8h20V8H2zm4 4H4v-2h2v2zm12 0h-2v-2h2v2z" />
+  </PixelIconWrapper>
+);
+
+export const TicketIcon = ({ className }: { className?: string }) => (
+  <PixelIconWrapper className={className}>
+    <path d="M4 8h16v8H4V8zm2 2v4h2v-4H6zm4 0v4h2v-4h-2zm4 0v4h2v-4h-2z" />
+  </PixelIconWrapper>
+);
+
+export const FoodIcon = ({ className }: { className?: string }) => (
+  <PixelIconWrapper className={className}>
+    <path d="M12 6a6 6 0 00-6 6v6h12v-6a6 6 0 00-6-6zm0 2a4 4 0 014 4H8a4 4 0 014-4z" />
+  </PixelIconWrapper>
+);
+
+export const DrinkIcon = ({ className }: { className?: string }) => (
+  <PixelIconWrapper className={className}>
+    <path d="M6 4v16h12V4H6zm2 2h8v12H8V6z" />
+  </PixelIconWrapper>
+);
+
+export const SweetIcon = ({ className }: { className?: string }) => (
+  <PixelIconWrapper className={className}>
+    <path d="M12 4a8 8 0 100 16 8 8 0 000-16zm0 2a6 6 0 110 12 6 6 0 010-12z" />
+  </PixelIconWrapper>
+);
+
+export const GiftIcon = ({ className }: { className?: string }) => (
+  <PixelIconWrapper className={className}>
+    <path d="M12 2L8 6h3v14h2V6h3L12 2zm-4 6H4v12h4V8zm8 0h4v12h-4V8z" />
+  </PixelIconWrapper>
+);
+
+export const BottleIcon = ({ className }: { className?: string }) => (
+  <PixelIconWrapper className={className}>
+    <path d="M10 2h4v4h-4V2zm-2 4h8v16H8V6zm2 2v12h4V8h-4z" />
+  </PixelIconWrapper>
+);

@@ -2,7 +2,7 @@ import * as Phaser from 'phaser';
 import { World } from './scenes/World';
 
 export function createGame(parent, options = {}) {
-  const { onEncounter, characterId } = options;
+  const { onEncounter, onFootstep, characterId } = options;
   
   const config = {
     type: Phaser.AUTO,
@@ -23,7 +23,7 @@ export function createGame(parent, options = {}) {
     callbacks: {
       preBoot: (game) => {
         // Set registry values BEFORE scenes boot
-        game.registry.set('callbacks', { onEncounter });
+        game.registry.set('callbacks', { onEncounter, onFootstep });
         game.registry.set('characterId', characterId);
       }
     }
