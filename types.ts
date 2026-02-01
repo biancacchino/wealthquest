@@ -45,12 +45,20 @@ export interface PlayerStats {
   financialMindfulness: number; // 0-100: Intentional decision-making awareness
 }
 
+export interface BankTransaction {
+  id: string;
+  type: 'deposit' | 'withdraw' | 'interest';
+  amount: number;
+  date: string;
+  balanceAfter: number;
+}
+
 export interface MoneyState {
-  cash: number;      // Money on hand - unsafe, shown with warning
-  bank: number;      // Deposited savings - safe
-  tfsa: number;      // Tax-free investment account - safe + growth potential
+  balance: number;
+  bankBalance: number;
   goal: MoneyGoal;
   history: ChoiceEvent[];
+  bankHistory: BankTransaction[];
 }
 
 export interface GameState {

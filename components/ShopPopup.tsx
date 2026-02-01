@@ -7,6 +7,7 @@ export interface ShopItem {
   name: string;
   price: number;
   emoji?: string;
+  Icon?: React.ComponentType<{ className?: string }>;
 }
 
 interface ShopPopupProps {
@@ -16,6 +17,7 @@ interface ShopPopupProps {
   onPurchase: (itemId: string, itemName: string, price: number) => void;
   onCancel: () => void;
   imagePath?: string;
+  MainIcon?: React.ComponentType<{ className?: string }>;
 }
 
 export const ShopPopup: React.FC<ShopPopupProps> = ({
@@ -25,6 +27,7 @@ export const ShopPopup: React.FC<ShopPopupProps> = ({
   onPurchase,
   onCancel,
   imagePath,
+  MainIcon,
 }) => {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
@@ -96,7 +99,11 @@ export const ShopPopup: React.FC<ShopPopupProps> = ({
                   alignItems: "center",
                 }}
               >
-                <span style={{ fontSize: "12rem", lineHeight: 1, display: "block", marginTop: "1.5rem" }}>🛍️</span>
+                {MainIcon ? (
+                   <MainIcon className="w-48 h-48 text-[#5a98b8]" />
+                ) : (
+                   <span style={{ fontSize: "12rem", lineHeight: 1, display: "block", marginTop: "1.5rem" }}>🛍️</span>
+                )}
               </div>
             </div>
 
@@ -147,8 +154,10 @@ export const ShopPopup: React.FC<ShopPopupProps> = ({
                           className="text-xs font-bold flex items-center gap-2"
                           style={{ color: "#1a3a52" }}
                         >
-                          {item.emoji && (
-                            <span className="text-lg">{item.emoji}</span>
+                          {item.Icon ? (
+                              <item.Icon className="w-6 h-6" />
+                          ) : (
+                              item.emoji && <span className="text-xl">{item.emoji}</span>
                           )}
                           {item.name}
                         </span>
