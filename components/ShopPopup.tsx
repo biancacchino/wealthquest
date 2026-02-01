@@ -197,17 +197,28 @@ export const ShopPopup: React.FC<ShopPopupProps> = ({
                 </button>
               </div>
 
-              {/* Balance Display */}
+              {/* Balance Display with Educational Tip */}
               <div
-                className="mt-4 p-2 text-center text-xs font-bold"
+                className="mt-4 p-3 text-center"
                 style={{
                   backgroundColor: "#e8f4f8",
                   border: "2px solid #5a98b8",
                   borderRadius: "4px",
-                  color: "#3a7a98",
                 }}
               >
-                Your balance: ${userBalance.toFixed(2)}
+                <div className="text-xs font-bold" style={{ color: "#3a7a98" }}>
+                  Your balance: ${userBalance.toFixed(2)}
+                </div>
+                {selectedItem && (
+                  <div className="text-[10px] mt-2" style={{ color: "#6b7280" }}>
+                    💡 After purchase: ${Math.max(0, userBalance - selectedItem.price).toFixed(2)} remaining
+                    {userBalance - selectedItem.price < 5 && userBalance >= selectedItem.price && (
+                      <div className="text-yellow-600 mt-1 font-bold">
+                        ⚠️ Keep some money for unexpected needs!
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -25,16 +25,24 @@ export interface MoneyGoal {
   cost: number;
 }
 
+export type EncounterCategory = 'need' | 'want' | 'social';
+
 export interface ChoiceEvent {
   id: string;
   encounterId: string;
   choice: 'buy' | 'skip';
   cost: number;
+  category?: EncounterCategory;
   reflection?: 'yes' | 'unsure' | 'no';
   deltas: {
     balanceAfter: number;
     notes: string[];
   };
+}
+
+export interface PlayerStats {
+  futurePreparedness: number; // 0-100: How well player is building toward long-term goals
+  financialMindfulness: number; // 0-100: Intentional decision-making awareness
 }
 
 export interface MoneyState {

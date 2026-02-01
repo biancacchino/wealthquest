@@ -1,19 +1,25 @@
 import React from 'react';
-import { MoneyState } from '../types';
+import { MoneyState, PlayerStats } from '../types';
 
 interface MoneyHUDProps {
   money: MoneyState;
+  stats: PlayerStats;
   onGoalClick: () => void;
   className?: string;
 }
 
 export const MoneyHUD: React.FC<MoneyHUDProps> = ({ 
   money, 
+  stats,
   onGoalClick, 
   className = '' 
 }) => {
-  const progressPercent = Math.min(100, (money.balance / money.goal.cost) * 100);
-  const amountNeeded = Math.max(0, money.goal.cost - money.balance);
+  // Goal progress = balance minus $5 emergency buffer
+  // This teaches players to always keep some money aside
+  const emergencyBuffer = 5;
+  const savedForGoal = Math.max(0, money.balance - emergencyBuffer);
+  const progressPercent = Math.min(100, (savedForGoal / money.goal.cost) * 100);
+  const amountNeeded = Math.max(0, money.goal.cost - savedForGoal);
 
   return (
     <div 
@@ -103,7 +109,7 @@ export const MoneyHUD: React.FC<MoneyHUDProps> = ({
                 {progressPercent >= 100 ? (
                   <span className="text-green-600">✓ Goal reached!</span>
                 ) : (
-                  <span>${money.balance} of ${money.goal.cost} saved</span>
+                  <span>${savedForGoal.toFixed(0)} of ${money.goal.cost} saved</span>
                 )}
               </div>
             </div>
@@ -125,6 +131,67 @@ export const MoneyHUD: React.FC<MoneyHUDProps> = ({
               </span>
             </div>
           )}
+
+          {/* Player Stats Section */}
+          <div
+            style={{
+              backgroundColor: '#fffef8',
+              border: '3px solid #c8d8e8',
+              borderRadius: '4px',
+              boxShadow: 'inset 2px 2px 0 #fff, inset -2px -2px 0 #b8c8d8',
+            }}
+            className="p-2"
+          >
+            <div className="text-[8px] text-gray-500 uppercase tracking-wider mb-2">Your Insights</div>
+            
+            {/* Future Preparedness */}
+            <div className="mb-2">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[7px] text-gray-600">🌱 Building for Tomorrow</span>
+                <span className="text-[7px] text-gray-500">{stats.futurePreparedness}%</span>
+              </div>
+              <div
+                className="h-2 overflow-hidden"
+                style={{
+                  backgroundColor: '#e8e8e0',
+                  border: '1px solid #c0c0b0',
+                  borderRadius: '2px',
+                }}
+              >
+                <div
+                  className="h-full transition-all duration-500"
+                  style={{
+                    width: `${stats.futurePreparedness}%`,
+                    backgroundColor: stats.futurePreparedness >= 70 ? '#4ade80' : stats.futurePreparedness >= 40 ? '#fbbf24' : '#f87171',
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Financial Mindfulness */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[7px] text-gray-600">💭 Making Intentional Choices</span>
+                <span className="text-[7px] text-gray-500">{stats.financialMindfulness}%</span>
+              </div>
+              <div
+                className="h-2 overflow-hidden"
+                style={{
+                  backgroundColor: '#e8e8e0',
+                  border: '1px solid #c0c0b0',
+                  borderRadius: '2px',
+                }}
+              >
+                <div
+                  className="h-full transition-all duration-500"
+                  style={{
+                    width: `${stats.financialMindfulness}%`,
+                    backgroundColor: stats.financialMindfulness >= 70 ? '#4ade80' : stats.financialMindfulness >= 40 ? '#fbbf24' : '#f87171',
+                  }}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

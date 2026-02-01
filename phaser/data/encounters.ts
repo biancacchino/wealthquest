@@ -1,8 +1,11 @@
+export type EncounterCategory = 'need' | 'want' | 'social';
+
 export interface ShopItem {
   id: string;
   name: string;
   price: number;
   emoji?: string;
+  category?: EncounterCategory;
 }
 
 export interface EncounterDefinition {
@@ -10,6 +13,7 @@ export interface EncounterDefinition {
   title: string;
   prompt: string;
   cost: number;
+  category: EncounterCategory;
   tile: {
     x: number;
     y: number;
@@ -27,6 +31,7 @@ export const ENCOUNTERS: EncounterDefinition[] = [
     title: 'Corner Store',
     prompt: 'Snack for $4',
     cost: 4,
+    category: 'want',
     tile: { x: 2, y: 2 },
     notes: {
       buy: [
@@ -39,10 +44,10 @@ export const ENCOUNTERS: EncounterDefinition[] = [
       ]
     },
     shopItems: [
-      { id: 'chip_bag', name: 'Chip Bag', price: 2.00, emoji: '🥔' },
-      { id: 'candy_bar', name: 'Candy Bar', price: 1.50, emoji: '🍫' },
-      { id: 'soda', name: 'Soda', price: 2.50, emoji: '🥤' },
-      { id: 'sandwich', name: 'Sandwich', price: 4.00, emoji: '🥪' },
+      { id: 'chip_bag', name: 'Chip Bag', price: 2.00, emoji: '🥔', category: 'want' },
+      { id: 'candy_bar', name: 'Candy Bar', price: 1.50, emoji: '🍫', category: 'want' },
+      { id: 'soda', name: 'Soda', price: 2.50, emoji: '🥤', category: 'want' },
+      { id: 'sandwich', name: 'Sandwich', price: 4.00, emoji: '🥪', category: 'need' },
     ]
   },
   {
@@ -50,6 +55,7 @@ export const ENCOUNTERS: EncounterDefinition[] = [
     title: 'Arcade',
     prompt: 'New game for $8',
     cost: 8,
+    category: 'want',
     tile: { x: 9, y: 2 },
     notes: {
       buy: [
@@ -62,10 +68,10 @@ export const ENCOUNTERS: EncounterDefinition[] = [
       ]
     },
     shopItems: [
-      { id: 'arcade_token', name: 'Arcade Tokens', price: 5.00, emoji: '🎮' },
-      { id: 'slushie', name: 'Slushie', price: 2.00, emoji: '🧊' },
-      { id: 'game_voucher', name: '5-Game Voucher', price: 10.00, emoji: '🎫' },
-      { id: 'snacks', name: 'Arcade Snacks', price: 3.50, emoji: '🍿' },
+      { id: 'arcade_token', name: 'Arcade Tokens', price: 5.00, emoji: '🎮', category: 'want' },
+      { id: 'slushie', name: 'Slushie', price: 2.00, emoji: '🧊', category: 'want' },
+      { id: 'game_voucher', name: '5-Game Voucher', price: 10.00, emoji: '🎫', category: 'want' },
+      { id: 'snacks', name: 'Arcade Snacks', price: 3.50, emoji: '🍿', category: 'want' },
     ]
   },
   {
@@ -73,6 +79,7 @@ export const ENCOUNTERS: EncounterDefinition[] = [
     title: 'Friend Invite',
     prompt: 'Movie night on Friday costs $10',
     cost: 10,
+    category: 'social',
     tile: { x: 6, y: 6 },
     notes: {
       buy: [
@@ -85,10 +92,10 @@ export const ENCOUNTERS: EncounterDefinition[] = [
       ]
     },
     shopItems: [
-      { id: 'movie_ticket', name: 'Movie Ticket', price: 10.00, emoji: '🎬' },
-      { id: 'popcorn', name: 'Popcorn', price: 5.00, emoji: '🍿' },
-      { id: 'candy', name: 'Theater Candy', price: 4.00, emoji: '🍬' },
-      { id: 'drink', name: 'Soda Combo', price: 6.00, emoji: '🥤' },
+      { id: 'movie_ticket', name: 'Movie Ticket', price: 10.00, emoji: '🎬', category: 'social' },
+      { id: 'popcorn', name: 'Popcorn', price: 5.00, emoji: '🍿', category: 'want' },
+      { id: 'candy', name: 'Theater Candy', price: 4.00, emoji: '🍬', category: 'want' },
+      { id: 'drink', name: 'Soda Combo', price: 6.00, emoji: '🥤', category: 'want' },
     ]
   }
 ];
