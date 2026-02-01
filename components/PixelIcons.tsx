@@ -63,3 +63,70 @@ export const MallIcon = ({ className }: { className?: string }) => (
     <path d="M8 4V8H6V20H18V8H16V4H8ZM10 6H14V8H10V6ZM8 10H16V18H8V10Z" />
   </PixelIconWrapper>
 );
+
+export const CloseIcon = ({ className }: { className?: string }) => (
+  <PixelIconWrapper className={className}>
+    <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12z" />
+  </PixelIconWrapper>
+);
+
+export const SavingsIcon = ({ className }: { className?: string }) => (
+  <PixelIconWrapper className={className}>
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-2.75v-1.1h-2v.8c-1.1.25-2 .97-2 2.3 0 2.22 2.66 2.5 3.5 2.8.84.3 1.5.54 1.5 1.25 0 .61-.6 1.15-1.5 1.15s-1.5-.64-1.5-1.2h-2c0 1.54 1.24 2.59 2.5 2.75v1h2v-1c1.17-.22 2.5-1.02 2.5-2.55 0-2.22-2.75-2.45-3.5-2.75-.75-.3-1.5-.6-1.5-1.25 0-.61.64-1.15 1.5-1.15s1.46.64 1.54 1.2h2c0-1.29-.98-2.34-2.54-2.5z" /> 
+    <path d="M11,6h2v3h-2V6z M11,15h2v3h-2V15z M7,11h3v2H7V11z M14,11h3v2h-3V11z" />
+  </PixelIconWrapper>
+);
+
+export const HistoryIcon = ({ className }: { className?: string }) => (
+  <PixelIconWrapper className={className}>
+     <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+  </PixelIconWrapper>
+);
+
+export const DepositIcon = ({ className }: { className?: string }) => (
+  <PixelIconWrapper className={className}>
+    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+  </PixelIconWrapper>
+);
+
+export const WithdrawIcon = ({ className }: { className?: string }) => (
+  <PixelIconWrapper className={className}>
+    <path d="M9 11h4v6h4v-6h4l-7-7-7 7zM5 18v2h14v-2H5z" />
+  </PixelIconWrapper>
+);
+
+export const BreadIcon = ({ className }: { className?: string }) => (
+    <PixelIconWrapper className={className}>
+        <path d="M6 8C6 6.5 7.5 5 10 5H14C16.5 5 18 6.5 18 8V16C18 17.5 16.5 19 14 19H10C7.5 19 6 17.5 6 16V8ZM8 8V16H16V8H8Z" />
+    </PixelIconWrapper>
+);
+
+export const MilkIcon = ({ className }: { className?: string }) => (
+    <PixelIconWrapper className={className}>
+        <path d="M7 4H17L19 7H5L7 4ZM5 8H19V20H5V8ZM9 12H15V14H9V12Z" />
+    </PixelIconWrapper>
+);
+
+export const FruitIcon = ({ className }: { className?: string }) => (
+    <PixelIconWrapper className={className}>
+        <path d="M12 2C13 2 14 3 14 4C14 5 13 6 12 7C11 6 10 5 10 4C10 3 11 2 12 2ZM6 8C6 7 7 6 9 6H15C17 6 18 7 18 8V10C18 13.31 15.31 16 12 16C8.69 16 6 13.31 6 10V8Z" />
+    </PixelIconWrapper>
+);
+
+export const EggIcon = ({ className }: { className?: string }) => (
+    <PixelIconWrapper className={className}>
+        <path d="M12 2C8 2 5 6 5 11C5 16 8 20 12 20C16 20 19 16 19 11C19 6 16 2 12 2ZM12 4C15 4 17 7 17 11C17 15 15 18 12 18C9 18 7 15 7 11C7 7 9 4 12 4Z" />
+    </PixelIconWrapper>
+);
+
+export const MedicineIcon = ({ className }: { className?: string }) => (
+    <PixelIconWrapper className={className}>
+        <path d="M10 2H14V22H10V2ZM2 10H22V14H2V10Z" />
+    </PixelIconWrapper>
+);
+
+export const WalletIcon = ({ className }: { className?: string }) => (
+    <PixelIconWrapper className={className}>
+        <path d="M4 4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4H4ZM4 6H20V18H4V6ZM8 11H16V13H8V11Z" />
+    </PixelIconWrapper>
+);

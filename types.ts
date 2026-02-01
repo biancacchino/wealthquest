@@ -25,11 +25,14 @@ export interface MoneyGoal {
   cost: number;
 }
 
+export type EncounterCategory = 'need' | 'want' | 'social';
+
 export interface ChoiceEvent {
   id: string;
   encounterId: string;
   choice: 'buy' | 'skip';
   cost: number;
+  category?: EncounterCategory;
   reflection?: 'yes' | 'unsure' | 'no';
   deltas: {
     balanceAfter: number;
@@ -37,10 +40,25 @@ export interface ChoiceEvent {
   };
 }
 
+export interface PlayerStats {
+  futurePreparedness: number; // 0-100: How well player is building toward long-term goals
+  financialMindfulness: number; // 0-100: Intentional decision-making awareness
+}
+
+export interface BankTransaction {
+  id: string;
+  type: 'deposit' | 'withdraw' | 'interest';
+  amount: number;
+  date: string;
+  balanceAfter: number;
+}
+
 export interface MoneyState {
   balance: number;
+  bankBalance: number;
   goal: MoneyGoal;
   history: ChoiceEvent[];
+  bankHistory: BankTransaction[];
 }
 
 export interface GameState {

@@ -1,33 +1,28 @@
-"use client";
-
 import React, { useState } from "react";
 
-export interface ShopItem {
+export interface CoffeeItem {
   id: string;
   name: string;
   price: number;
   emoji?: string;
-  Icon?: React.ComponentType<{ className?: string }>;
 }
 
-interface ShopPopupProps {
+interface CoffeePopupProps {
   title: string;
-  items: ShopItem[];
+  items: CoffeeItem[];
   userBalance: number;
   onPurchase: (itemId: string, itemName: string, price: number) => void;
   onCancel: () => void;
   imagePath?: string;
-  MainIcon?: React.ComponentType<{ className?: string }>;
 }
 
-export const ShopPopup: React.FC<ShopPopupProps> = ({
+export const CoffeePopup: React.FC<CoffeePopupProps> = ({
   title,
   items,
   userBalance,
   onPurchase,
   onCancel,
   imagePath,
-  MainIcon,
 }) => {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
@@ -53,7 +48,7 @@ export const ShopPopup: React.FC<ShopPopupProps> = ({
           borderRadius: "8px",
           boxShadow:
             "inset 2px 2px 0 #7ab8d8, inset -2px -2px 0 #2a5a78, 8px 8px 0 rgba(0,0,0,0.5)",
-          fontFamily: '"Press Start 2P", monospace',
+          fontFamily: 'Press Start 2P, monospace',
         }}
       >
         {/* Title Bar */}
@@ -99,10 +94,46 @@ export const ShopPopup: React.FC<ShopPopupProps> = ({
                   alignItems: "center",
                 }}
               >
-                {MainIcon ? (
-                   <MainIcon className="w-48 h-48 text-[#5a98b8]" />
+                {/* Replace with coffee bar image if available */}
+                {imagePath ? (
+                  <img
+                    src={imagePath}
+                    alt="Coffee Bar"
+                    style={{
+                      width: "90%",
+                      height: "90%",
+                      objectFit: "contain",
+                      margin: "auto",
+                      display: "block",
+                    }}
+                    onError={e => {
+                      e.currentTarget.style.display = 'none';
+                      const emojiSpan = document.createElement('span');
+                      emojiSpan.textContent = '☕️';
+                      emojiSpan.style.fontSize = '8rem';
+                      emojiSpan.style.lineHeight = '1';
+                      emojiSpan.style.display = 'flex';
+                      emojiSpan.style.alignItems = 'center';
+                      emojiSpan.style.justifyContent = 'center';
+                      emojiSpan.style.height = '100%';
+                      emojiSpan.style.width = '100%';
+                      e.currentTarget.parentNode?.appendChild(emojiSpan);
+                    }}
+                  />
                 ) : (
-                   <span style={{ fontSize: "12rem", lineHeight: 1, display: "block", marginTop: "1.5rem" }}>🛍️</span>
+                  <span
+                    style={{
+                      fontSize: "8rem",
+                      lineHeight: 1,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: "100%",
+                      width: "100%",
+                    }}
+                  >
+                    ☕️
+                  </span>
                 )}
               </div>
             </div>
@@ -154,10 +185,8 @@ export const ShopPopup: React.FC<ShopPopupProps> = ({
                           className="text-xs font-bold flex items-center gap-2"
                           style={{ color: "#1a3a52" }}
                         >
-                          {item.Icon ? (
-                              <item.Icon className="w-6 h-6" />
-                          ) : (
-                              item.emoji && <span className="text-xl">{item.emoji}</span>
+                          {item.emoji && (
+                            <span className="text-lg">{item.emoji}</span>
                           )}
                           {item.name}
                         </span>
@@ -206,28 +235,17 @@ export const ShopPopup: React.FC<ShopPopupProps> = ({
                 </button>
               </div>
 
-              {/* Balance Display with Educational Tip */}
+              {/* Balance Display */}
               <div
-                className="mt-4 p-3 text-center"
+                className="mt-4 p-2 text-center text-xs font-bold"
                 style={{
                   backgroundColor: "#e8f4f8",
                   border: "2px solid #5a98b8",
                   borderRadius: "4px",
+                  color: "#3a7a98",
                 }}
               >
-                <div className="text-xs font-bold" style={{ color: "#3a7a98" }}>
-                  Your balance: ${userBalance.toFixed(2)}
-                </div>
-                {selectedItem && (
-                  <div className="text-[10px] mt-2" style={{ color: "#6b7280" }}>
-                    💡 After purchase: ${Math.max(0, userBalance - selectedItem.price).toFixed(2)} remaining
-                    {userBalance - selectedItem.price < 5 && userBalance >= selectedItem.price && (
-                      <div className="text-yellow-600 mt-1 font-bold">
-                        ⚠️ Keep some money for unexpected needs!
-                      </div>
-                    )}
-                  </div>
-                )}
+                Your balance: ${userBalance.toFixed(2)}
               </div>
             </div>
           </div>
