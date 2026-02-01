@@ -823,12 +823,12 @@ export const Overworld: React.FC<OverworldProps> = ({
 
   return (
     <div className="flex flex-col min-h-screen bg-[#0b0f19] text-white relative overflow-hidden">
-      {/* Money HUD - positioned in top right */}
+      {/* Money HUD - vertically centered on right side */}
       <MoneyHUD
         money={money}
         stats={playerStats}
         onGoalClick={() => setShowGoalPicker(true)}
-        className="absolute top-4 right-4 z-20"
+        className="absolute top-1/2 right-4 -translate-y-1/2 z-20"
       />
 
       <div className="flex-1 flex flex-col lg:flex-row items-center justify-center gap-8 p-6 z-10">
