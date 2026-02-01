@@ -2,7 +2,7 @@ import "../styles/globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Pocket Monsters - ElleHacks 2026",
+  title: "Wealth Quest — Ellehacks 2026",
   description: "A high-fidelity retro Pokémon-style authentication system."
 };
 

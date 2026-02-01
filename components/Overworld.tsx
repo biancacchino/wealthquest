@@ -8,7 +8,7 @@ import React, {
   useState,
 } from "react";
 import type Phaser from "phaser";
-import { UserProfile, MoneyState, ChoiceEvent } from "../types";
+import { UserProfile, MoneyState, ChoiceEvent, PlayerStats, EncounterCategory } from "../types";
 import { clearSession, saveUser } from "../services/storage";
 import { RetroBox } from "./RetroBox";
 import { PhaserGame } from "./PhaserGame";
@@ -83,12 +83,81 @@ const BUS_STOPS = [
 
 // Market shop items
 const MARKET_SHOP_ITEMS = [
-  { id: "bread", name: "Bread", price: 2.0, emoji: "🍞" },
-  { id: "milk", name: "Milk", price: 1.5, emoji: "🥛" },
-  { id: "fruit", name: "Fruit", price: 2.5, emoji: "🍎" },
-  { id: "eggs", name: "Eggs", price: 1.8, emoji: "🥚" },
-  { id: "medicine", name: "Medicine", price: 5.0, emoji: "💊" },
+  { id: "bread", name: "Bread", price: 2.0, emoji: "🍞", category: 'need' as EncounterCategory },
+  { id: "milk", name: "Milk", price: 1.5, emoji: "🥛", category: 'need' as EncounterCategory },
+  { id: "fruit", name: "Fruit", price: 2.5, emoji: "🍎", category: 'need' as EncounterCategory },
+  { id: "eggs", name: "Eggs", price: 1.8, emoji: "🥚", category: 'need' as EncounterCategory },
+  { id: "medicine", name: "Medicine", price: 5.0, emoji: "💊", category: 'need' as EncounterCategory },
 ];
+
+// Compute player stats from money state - reflects Wealthsimple's tone of insights, not scores
+const computeStats = (money: MoneyState): PlayerStats => {
+  const history = money.history;
+  
+  // Base stats when no history
+  if (history.length === 0) {
+    return {
+      futurePreparedness: 50, // Start neutral
+      financialMindfulness: 50,
+    };
+  }
+
+  // --- Future Preparedness ---
+  // Measures: goal progress, skip ratio (delayed gratification), balance buffer
+  
+  // Goal progress (0-100): How close to achieving the goal
+  const goalProgress = Math.min(100, (money.balance / money.goal.cost) * 100);
+  
+  // Skip ratio (0-100): Higher skips = better delayed gratification
+  const totalChoices = history.length;
+  const skips = history.filter(e => e.choice === 'skip').length;
+  const skipRatio = totalChoices > 0 ? (skips / totalChoices) * 100 : 50;
+  
+  // Buffer score (0-100): Having money above $0 shows emergency mindset
+  // $25+ buffer = 100%, $0 = 0%
+  const bufferScore = Math.min(100, (money.balance / 25) * 100);
+  
+  // Weighted calculation for Future Preparedness
+  const futurePreparedness = Math.round(
+    (goalProgress * 0.5) + (skipRatio * 0.3) + (bufferScore * 0.2)
+  );
+
+  // --- Financial Mindfulness ---
+  // Measures: needs vs wants ratio, balanced decisions, variety of choices
+  
+  // Needs ratio (0-100): Higher when buying needs over wants
+  const purchases = history.filter(e => e.choice === 'buy');
+  const needPurchases = purchases.filter(e => e.category === 'need').length;
+  const wantPurchases = purchases.filter(e => e.category === 'want').length;
+  const socialPurchases = purchases.filter(e => e.category === 'social').length;
+  
+  // Needs are good, social is neutral, pure wants lower the score
+  let needsScore = 50;
+  if (purchases.length > 0) {
+    // Needs = +1, Social = +0.5, Wants = 0
+    const weightedSum = (needPurchases * 1) + (socialPurchases * 0.5) + (wantPurchases * 0);
+    needsScore = Math.min(100, (weightedSum / purchases.length) * 100);
+  }
+  
+  // Balanced decisions (0-100): Not always buying OR always skipping shows thoughtfulness
+  // Perfect balance (50/50) = 100, all one way = lower
+  const buyRatio = totalChoices > 0 ? (purchases.length / totalChoices) : 0.5;
+  const balanceScore = 100 - Math.abs(buyRatio - 0.5) * 200; // 50/50 = 100, 100/0 = 0
+  
+  // Variety score (0-100): Engaging with different encounter types
+  const uniqueEncounters = new Set(history.map(e => e.encounterId)).size;
+  const varietyScore = Math.min(100, (uniqueEncounters / 3) * 100); // 3 encounter types = max
+  
+  // Weighted calculation for Financial Mindfulness
+  const financialMindfulness = Math.round(
+    (needsScore * 0.4) + (balanceScore * 0.4) + (varietyScore * 0.2)
+  );
+
+  return {
+    futurePreparedness: Math.max(0, Math.min(100, futurePreparedness)),
+    financialMindfulness: Math.max(0, Math.min(100, financialMindfulness)),
+  };
+};
 
 interface OverworldProps {
   user: UserProfile;
@@ -114,6 +183,11 @@ export const Overworld: React.FC<OverworldProps> = ({
   );
   const [showGoalPicker, setShowGoalPicker] = useState(false);
   const [isTraveling, setIsTraveling] = useState(false);
+  const [workEarnings, setWorkEarnings] = useState<number | null>(null);
+  const [workCooldownEnd, setWorkCooldownEnd] = useState<number>(0);
+
+  // Compute player stats from money history
+  const playerStats = useMemo(() => computeStats(money), [money]);
 
   useEffect(() => {
     setMoney(ensureMoneyState(user.gameState.money));
@@ -204,12 +278,31 @@ export const Overworld: React.FC<OverworldProps> = ({
     if (activeDoorId) {
       notifyDecision(activeDoorId, "yes");
     }
-
-    // Check if it's a shop door
-    if (activeDoorId === "DOOR_MARKET" || activeDoorId === "DOOR_MALL") {
-      setShowShop(true);
-      // Do not close door yet, shop is an overlay
+    // Handle Work building - earn random $15-$20 with cooldown
+    if (activeDoorId === 'DOOR_WORK') {
+      const now = Date.now();
+      
+      // Check if still on cooldown
+      if (now < workCooldownEnd) {
+        const secondsLeft = Math.ceil((workCooldownEnd - now) / 1000);
+        alert(`You need to rest! Come back in ${secondsLeft} seconds.`);
+        closeDoor();
+        return;
+      }
+      
+      // Earn money and start 20 second cooldown
+      const earned = Math.floor(Math.random() * 6) + 15; // 15-20 inclusive
+      earnMoney(earned, 'work');
+      setWorkEarnings(earned);
+      setWorkCooldownEnd(now + 20000);
       return;
+    }
+    
+    // Check if it's a shop door
+    if (activeDoorId === 'DOOR_MARKET' || activeDoorId === 'DOOR_MALL') {
+        setShowShop(true);
+        // Do not close door yet, shop is an overlay
+        return;
     }
 
     // TODO: Navigate to building Scene or Page
@@ -264,18 +357,25 @@ export const Overworld: React.FC<OverworldProps> = ({
     itemName: string,
     price: number,
   ) => {
-    const newBalance = Math.max(0, money.balance - price);
+    // Round to 2 decimal places to avoid floating point issues
+    const newBalance = Math.round(Math.max(0, money.balance - price) * 100) / 100;
+    
     const updatedMoney: MoneyState = {
       ...money,
       balance: newBalance,
     };
     saveMoneyState(updatedMoney);
 
-    // Mark encounter complete and close shop
+    // Handle encounter-based shop (Corner Store, Arcade, etc.)
     if (activeEncounterId) {
       markEncounterComplete(activeEncounterId);
+      closeEncounter();
+    } 
+    // Handle door-based shop (Market, Mall)
+    else if (activeDoorId) {
+      setShowShop(false);
+      closeDoor();
     }
-    closeEncounter();
   };
 
   // Change savings goal
@@ -320,6 +420,7 @@ export const Overworld: React.FC<OverworldProps> = ({
       encounterId: activeEncounter.id,
       choice,
       cost: activeEncounter.cost,
+      category: activeEncounter.category,
       deltas: {
         balanceAfter: newBalance,
         notes,
@@ -344,6 +445,14 @@ export const Overworld: React.FC<OverworldProps> = ({
 
   return (
     <div className="flex flex-col min-h-screen bg-[#0b0f19] text-white relative overflow-hidden">
+      {/* Money HUD - positioned in top right */}
+      <MoneyHUD 
+        money={money} 
+        stats={playerStats}
+        onGoalClick={() => setShowGoalPicker(true)}
+        className="absolute top-4 right-4 z-20"
+      />
+
       <div className="flex-1 flex flex-col lg:flex-row items-center justify-center gap-8 p-6 z-10">
         <PhaserGame
           onEncounter={handleEncounter}
@@ -688,6 +797,59 @@ export const Overworld: React.FC<OverworldProps> = ({
                 }}
               >
                 Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WORK EARNINGS POPUP */}
+      {workEarnings !== null && (
+        <div className="absolute inset-0 z-30 bg-black/70 flex items-center justify-center p-4">
+          <div
+            className="max-w-sm w-full text-center"
+            style={{
+              backgroundColor: "#9ccce8",
+              border: "4px solid #5a98b8",
+              borderRadius: "8px",
+              boxShadow: "inset 2px 2px 0 #b8e0f0, inset -2px -2px 0 #4888a8, 8px 8px 0 rgba(0,0,0,0.3)",
+              fontFamily: '"Press Start 2P", monospace',
+            }}
+          >
+            <div
+              className="px-4 py-3"
+              style={{
+                backgroundColor: "#5a98b8",
+                borderRadius: "4px 4px 0 0",
+                borderBottom: "2px solid #4888a8",
+              }}
+            >
+              <span className="text-white text-xs font-bold">💼 Work Complete!</span>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="text-4xl">💰</div>
+              <p className="text-sm text-gray-700">Great job! You earned:</p>
+              <p className="text-2xl font-bold text-green-600">${workEarnings}</p>
+              <p className="text-[10px] text-gray-500">
+                New balance: ${money.balance.toFixed(2)}
+              </p>
+              <p className="text-[10px] text-gray-400">
+                Come back in 20 seconds to work again!
+              </p>
+              <button
+                onClick={() => {
+                  setWorkEarnings(null);
+                  closeDoor();
+                }}
+                className="w-full py-3 text-xs font-bold text-white"
+                style={{
+                  backgroundColor: "#4888b0",
+                  borderRadius: "20px",
+                  border: "3px solid #3070a0",
+                  boxShadow: "inset 0 2px 0 #68a8d0, inset 0 -2px 0 #285888",
+                }}
+              >
+                Awesome!
               </button>
             </div>
           </div>
