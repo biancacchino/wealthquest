@@ -1,3 +1,10 @@
+export interface ShopItem {
+  id: string;
+  name: string;
+  price: number;
+  emoji?: string;
+}
+
 export interface EncounterDefinition {
   id: string;
   title: string;
@@ -11,6 +18,7 @@ export interface EncounterDefinition {
     buy: string[];
     skip: string[];
   };
+  shopItems: ShopItem[];
 }
 
 export const ENCOUNTERS: EncounterDefinition[] = [
@@ -29,7 +37,13 @@ export const ENCOUNTERS: EncounterDefinition[] = [
         'Skipping keeps your money for bigger plans.',
         'You stay on track for your goal.'
       ]
-    }
+    },
+    shopItems: [
+      { id: 'chip_bag', name: 'Chip Bag', price: 2.00, emoji: '🥔' },
+      { id: 'candy_bar', name: 'Candy Bar', price: 1.50, emoji: '🍫' },
+      { id: 'soda', name: 'Soda', price: 2.50, emoji: '🥤' },
+      { id: 'sandwich', name: 'Sandwich', price: 4.00, emoji: '🥪' },
+    ]
   },
   {
     id: 'arcade',
@@ -46,7 +60,13 @@ export const ENCOUNTERS: EncounterDefinition[] = [
         'You keep your balance for your goal.',
         'Waiting can make big goals easier.'
       ]
-    }
+    },
+    shopItems: [
+      { id: 'arcade_token', name: 'Arcade Tokens', price: 5.00, emoji: '🎮' },
+      { id: 'slushie', name: 'Slushie', price: 2.00, emoji: '🧊' },
+      { id: 'game_voucher', name: '5-Game Voucher', price: 10.00, emoji: '🎫' },
+      { id: 'snacks', name: 'Arcade Snacks', price: 3.50, emoji: '🍿' },
+    ]
   },
   {
     id: 'friend_invite',
@@ -63,6 +83,12 @@ export const ENCOUNTERS: EncounterDefinition[] = [
         'You keep your balance for your goal.',
         'Saying no can help with long-term plans.'
       ]
-    }
+    },
+    shopItems: [
+      { id: 'movie_ticket', name: 'Movie Ticket', price: 10.00, emoji: '🎬' },
+      { id: 'popcorn', name: 'Popcorn', price: 5.00, emoji: '🍿' },
+      { id: 'candy', name: 'Theater Candy', price: 4.00, emoji: '🍬' },
+      { id: 'drink', name: 'Soda Combo', price: 6.00, emoji: '🥤' },
+    ]
   }
 ];

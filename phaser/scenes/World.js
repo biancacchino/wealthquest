@@ -165,8 +165,8 @@ export class World extends Phaser.Scene {
 
     // Helper to create door trigger
     const createDoor = (x, y, w, h, name, color = 0x00ff00) => {
-        // DEBUGGING: Set alpha to 0.5 to see the box. Set to 0 to hide it.
-        const zone = this.add.rectangle(x + w/2, y + h/2, w, h, color, 0); 
+        // Set alpha to 0 to hide the box.
+        const zone = this.add.rectangle(x + w/2, y + h/2, w, h, color, 0); // alpha 0 (invisible)
         this.doors.add(zone);
         zone.name = name;
     };

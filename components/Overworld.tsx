@@ -15,6 +15,7 @@ import { PhaserGame } from "./PhaserGame";
 import { ENCOUNTERS } from "../phaser/data/encounters";
 import { MoneyHUD } from "./MoneyHUD";
 import { MONEY_GOALS } from "../constants";
+import { ShopPopup } from "./ShopPopup";
 
 // Mapping of Door IDs to display names
 const DOOR_MAPPING: Record<string, string> = {
@@ -40,6 +41,15 @@ const DOOR_MAPPING: Record<string, string> = {
   DOOR_CORNER_STORE: "Corner Store",
 };
 
+// Market shop items
+const MARKET_SHOP_ITEMS = [
+  { id: 'bread', name: 'Bread', price: 2.00, emoji: '🍞' },
+  { id: 'milk', name: 'Milk', price: 1.50, emoji: '🥛' },
+  { id: 'fruit', name: 'Fruit', price: 2.50, emoji: '🍎' },
+  { id: 'eggs', name: 'Eggs', price: 1.80, emoji: '🥚' },
+  { id: 'medicine', name: 'Medicine', price: 5.00, emoji: '💊' },
+];
+
 interface OverworldProps {
   user: UserProfile;
   onLogout: () => void;
@@ -54,6 +64,7 @@ export const Overworld: React.FC<OverworldProps> = ({
     null,
   );
   const [activeDoorId, setActiveDoorId] = useState<string | null>(null);
+  const [showShop, setShowShop] = useState(false);
   const [modalStep, setModalStep] = useState<"choice" | "preview" | "result">(
     "choice",
   );
@@ -103,17 +114,16 @@ export const Overworld: React.FC<OverworldProps> = ({
 
   const handleEncounter = useCallback(
     (encounterId: string) => {
-      // Check if it's a door
+      // Check if it's a door (including market)
       if (DOOR_MAPPING[encounterId]) {
         setActiveDoorId(encounterId);
         setMovementLocked(true);
         return;
       }
 
-      // Otherwise handle as normal encounter
+      // Otherwise handle as normal shop encounter
       setActiveEncounterId(encounterId);
-      setModalStep("choice");
-      setResultNotes([]);
+      setShowShop(true);
       setMovementLocked(true);
     },
     [setMovementLocked],
@@ -121,6 +131,7 @@ export const Overworld: React.FC<OverworldProps> = ({
 
   const closeEncounter = () => {
     setActiveEncounterId(null);
+    setShowShop(false);
     setModalStep("choice");
     setResultNotes([]);
     setMovementLocked(false);
@@ -135,6 +146,7 @@ export const Overworld: React.FC<OverworldProps> = ({
 
   const closeDoor = () => {
     setActiveDoorId(null);
+    setShowShop(false);
     setMovementLocked(false);
     // Step back slightly to avoid re-triggering immediately
     const world = gameRef.current?.scene?.getScene("World") as any;
@@ -164,6 +176,21 @@ export const Overworld: React.FC<OverworldProps> = ({
       },
     };
     saveUser(updatedUser);
+  };
+
+  const handleShopPurchase = (itemId: string, itemName: string, price: number) => {
+    const newBalance = Math.max(0, money.balance - price);
+    const updatedMoney: MoneyState = {
+      ...money,
+      balance: newBalance,
+    };
+    saveMoneyState(updatedMoney);
+    
+    // Mark encounter complete and close shop
+    if (activeEncounterId) {
+      markEncounterComplete(activeEncounterId);
+    }
+    closeEncounter();
   };
 
   // Change savings goal
@@ -327,6 +354,28 @@ export const Overworld: React.FC<OverworldProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* SHOP POPUP FOR ENCOUNTERS */}
+      {showShop && activeEncounterId && activeEncounter && (
+        <ShopPopup
+          title={activeEncounter.title}
+          items={activeEncounter.shopItems}
+          userBalance={money.balance}
+          onPurchase={handleShopPurchase}
+          onCancel={closeEncounter}
+        />
+      )}
+
+      {/* SHOP POPUP FOR MARKET DOOR */}
+      {showShop && activeDoorId === "DOOR_MARKET" && (
+        <ShopPopup
+          title="Market"
+          items={MARKET_SHOP_ITEMS}
+          userBalance={money.balance}
+          onPurchase={handleShopPurchase}
+          onCancel={closeDoor}
+        />
       )}
 
       {/* GOAL PICKER MODAL */}
