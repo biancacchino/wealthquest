@@ -45,3 +45,47 @@ export const STARTERS: Monster[] = [
 ];
 
 export const SAVE_PREFIX = 'ellehacks26_save_';
+
+// Money goals aligned with Wealthsimple values:
+// - Progress as clarity, not power
+// - Plain language descriptions
+// - Achievable targets that teach saving fundamentals
+export const MONEY_GOALS = [
+  {
+    id: 'treat' as const,
+    label: 'Treat Yourself',
+    cost: 35,
+    description: 'A small reward for practicing patience',
+    emoji: '🍦',
+  },
+  {
+    id: 'headphones' as const,
+    label: 'Headphones',
+    cost: 60,
+    description: 'Save up for something you can use every day',
+    emoji: '🎧',
+  },
+  {
+    id: 'game' as const,
+    label: 'Video Game',
+    cost: 50,
+    description: 'Plan ahead for entertainment',
+    emoji: '🎮',
+  },
+  {
+    id: 'outfit' as const,
+    label: 'New Outfit',
+    cost: 75,
+    description: 'A bigger goal takes more planning',
+    emoji: '👕',
+  },
+  {
+    id: 'biggoal' as const,
+    label: 'Big Goal',
+    cost: 100,
+    description: 'The bigger the goal, the better it feels to reach it',
+    emoji: '🌟',
+  },
+] as const;
+
+export type MoneyGoalId = typeof MONEY_GOALS[number]['id'];

@@ -13,6 +13,8 @@ import { clearSession, saveUser } from "../services/storage";
 import { RetroBox } from "./RetroBox";
 import { PhaserGame } from "./PhaserGame";
 import { ENCOUNTERS } from "../phaser/data/encounters";
+import { MoneyHUD } from "./MoneyHUD";
+import { MONEY_GOALS } from "../constants";
 
 // Mapping of Door IDs to display names
 const DOOR_MAPPING: Record<string, string> = {
@@ -46,6 +48,7 @@ export const Overworld: React.FC<OverworldProps> = ({
   const [money, setMoney] = useState<MoneyState>(() =>
     ensureMoneyState(user.gameState.money),
   );
+  const [showGoalPicker, setShowGoalPicker] = useState(false);
 
   useEffect(() => {
     setMoney(ensureMoneyState(user.gameState.money));
@@ -140,6 +143,34 @@ export const Overworld: React.FC<OverworldProps> = ({
     saveUser(updatedUser);
   };
 
+  // Change savings goal
+  const changeGoal = (goalId: string) => {
+    const newGoal = MONEY_GOALS.find(g => g.id === goalId);
+    if (!newGoal) return;
+    
+    const updatedMoney: MoneyState = {
+      ...money,
+      goal: {
+        id: newGoal.id,
+        label: newGoal.label,
+        cost: newGoal.cost,
+      },
+    };
+    saveMoneyState(updatedMoney);
+    setShowGoalPicker(false);
+  };
+
+  // Add money from working at encounters
+  const earnMoney = (amount: number, source: string) => {
+    const newBalance = money.balance + amount;
+    const updatedMoney: MoneyState = {
+      ...money,
+      balance: newBalance,
+    };
+    saveMoneyState(updatedMoney);
+    return newBalance;
+  };
+
   const applyChoice = (choice: "buy" | "skip") => {
     if (!activeEncounter) return;
 
@@ -147,22 +178,15 @@ export const Overworld: React.FC<OverworldProps> = ({
       choice === "buy"
         ? Math.max(0, money.balance - activeEncounter.cost)
         : money.balance;
-    const goalETAWeeks = calculateGoalETAWeeks(
-      newBalance,
-      money.weeklyAllowance,
-      money.goal.cost,
-    );
     const notes = activeEncounter.notes[choice];
 
     const event: ChoiceEvent = {
       id: createEventId(),
-      dayIndex: money.dayIndex,
       encounterId: activeEncounter.id,
       choice,
       cost: activeEncounter.cost,
       deltas: {
         balanceAfter: newBalance,
-        goalETAWeeks,
         notes,
       },
     };
@@ -170,7 +194,6 @@ export const Overworld: React.FC<OverworldProps> = ({
     const updatedMoney: MoneyState = {
       ...money,
       balance: newBalance,
-      dayIndex: Math.min(6, money.dayIndex + 1),
       history: [...money.history, event],
     };
 
@@ -279,33 +302,154 @@ export const Overworld: React.FC<OverworldProps> = ({
           </div>
         </div>
       )}
+
+      {/* GOAL PICKER MODAL */}
+      {showGoalPicker && (
+        <div className="absolute inset-0 z-30 bg-black/70 flex items-center justify-center p-4">
+          <div
+            className="max-w-md w-full"
+            style={{
+              backgroundColor: '#9ccce8',
+              border: '4px solid #5a98b8',
+              borderRadius: '8px',
+              boxShadow: 'inset 2px 2px 0 #b8e0f0, inset -2px -2px 0 #4888a8, 8px 8px 0 rgba(0,0,0,0.3)',
+              fontFamily: '"Press Start 2P", monospace',
+            }}
+          >
+            {/* Title Bar */}
+            <div
+              className="flex items-center justify-between px-4 py-3"
+              style={{ 
+                backgroundColor: '#5a98b8', 
+                borderRadius: '4px 4px 0 0',
+                borderBottom: '2px solid #4888a8'
+              }}
+            >
+              <span className="text-white text-xs font-bold tracking-wide">🎯 Choose Your Goal</span>
+              <button 
+                onClick={() => setShowGoalPicker(false)}
+                className="text-white/70 hover:text-white text-xs"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-4">
+              {/* Info message */}
+              <div 
+                className="mb-4 p-3 text-center"
+                style={{
+                  backgroundColor: '#fffef8',
+                  border: '3px solid #c8d8e8',
+                  borderRadius: '4px',
+                }}
+              >
+                <p className="text-[10px] text-gray-600">
+                  Pick something to save for. Your progress carries over!
+                </p>
+              </div>
+
+              {/* Goal Options */}
+              <div className="space-y-2">
+                {MONEY_GOALS.map((goal) => {
+                  const isCurrentGoal = money.goal.id === goal.id;
+                  const progressPercent = Math.min(100, (money.balance / goal.cost) * 100);
+                  const amountNeeded = Math.max(0, goal.cost - money.balance);
+
+                  return (
+                    <button
+                      key={goal.id}
+                      onClick={() => changeGoal(goal.id)}
+                      disabled={isCurrentGoal}
+                      className={`w-full text-left transition-all ${isCurrentGoal ? 'scale-[1.02]' : 'hover:scale-[1.01]'}`}
+                      style={{
+                        backgroundColor: isCurrentGoal ? '#d8f4d8' : '#fffef8',
+                        border: `3px solid ${isCurrentGoal ? '#4ade80' : '#c8d8e8'}`,
+                        borderRadius: '6px',
+                        boxShadow: isCurrentGoal 
+                          ? 'inset 2px 2px 0 #e8ffe8, inset -2px -2px 0 #a8d8a8'
+                          : 'inset 2px 2px 0 #fff, inset -2px -2px 0 #b8c8d8',
+                      }}
+                    >
+                      <div className="p-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm">
+                            {goal.emoji} {goal.label}
+                          </span>
+                          <span className="text-xs text-gray-600 font-bold">${goal.cost}</span>
+                        </div>
+                        <p className="text-[8px] text-gray-500 mb-2">{goal.description}</p>
+                        
+                        {/* Mini progress bar */}
+                        <div 
+                          className="h-2 overflow-hidden mb-1"
+                          style={{
+                            backgroundColor: '#e8e8e0',
+                            border: '1px solid #c0c0b0',
+                            borderRadius: '2px',
+                          }}
+                        >
+                          <div
+                            className="h-full"
+                            style={{
+                              width: `${progressPercent}%`,
+                              backgroundColor: progressPercent >= 100 ? '#4ade80' : '#58a8d0',
+                            }}
+                          />
+                        </div>
+                        
+                        <div className="flex justify-between text-[8px] text-gray-500">
+                          <span>${money.balance} saved</span>
+                          <span>{amountNeeded === 0 ? '✓ Ready!' : `$${amountNeeded} to go`}</span>
+                        </div>
+                        
+                        {isCurrentGoal && (
+                          <div className="mt-2 text-[8px] text-green-600 font-bold text-center">
+                            ✓ Current Goal
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Close button */}
+              <button
+                onClick={() => setShowGoalPicker(false)}
+                className="w-full mt-4 py-3 text-xs font-bold transition-colors"
+                style={{
+                  backgroundColor: '#4888b0',
+                  color: 'white',
+                  borderRadius: '20px',
+                  border: '3px solid #3070a0',
+                  boxShadow: 'inset 0 2px 0 #68a8d0, inset 0 -2px 0 #285888',
+                }}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 const ensureMoneyState = (moneyState?: MoneyState): MoneyState => {
-  if (moneyState) return moneyState;
+  if (moneyState) {
+    return moneyState;
+  }
   return {
-    weeklyAllowance: 20,
-    balance: 20,
+    balance: 100,
     goal: {
       id: "headphones",
       label: "Headphones",
       cost: 60,
     },
-    dayIndex: 0,
     history: [],
   };
-};
-
-const calculateGoalETAWeeks = (
-  balance: number,
-  weeklyAllowance: number,
-  goalCost: number,
-) => {
-  if (goalCost <= balance) return 0;
-  if (weeklyAllowance <= 0) return 99;
-  return Math.ceil((goalCost - balance) / weeklyAllowance);
 };
 
 const createEventId = () => {

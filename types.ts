@@ -17,7 +17,7 @@ export interface Monster {
   sprite: string;
 }
 
-export type MoneyGoalId = 'headphones' | 'game' | 'outfit';
+export type MoneyGoalId = 'treat' | 'headphones' | 'game' | 'outfit' | 'biggoal';
 
 export interface MoneyGoal {
   id: MoneyGoalId;
@@ -27,23 +27,19 @@ export interface MoneyGoal {
 
 export interface ChoiceEvent {
   id: string;
-  dayIndex: number;
   encounterId: string;
   choice: 'buy' | 'skip';
   cost: number;
   reflection?: 'yes' | 'unsure' | 'no';
   deltas: {
     balanceAfter: number;
-    goalETAWeeks: number;
     notes: string[];
   };
 }
 
 export interface MoneyState {
-  weeklyAllowance: number;
   balance: number;
   goal: MoneyGoal;
-  dayIndex: number;
   history: ChoiceEvent[];
 }
 
@@ -68,5 +64,6 @@ export enum AppView {
   INTRO = 'INTRO',
   CHAR_SELECT = 'CHAR_SELECT',
   CONTINUE_PROMPT = 'CONTINUE_PROMPT',
+  LOADING = 'LOADING',
   OVERWORLD = 'OVERWORLD'
 }

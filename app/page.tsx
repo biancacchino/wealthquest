@@ -6,6 +6,7 @@ import { getCurrentSession, setCurrentSession, saveUser, createInitialGameState 
 import { LoginScreen } from '../components/LoginScreen';
 import { IntroScene } from '../components/IntroScene';
 import { CharacterSelect } from '../components/CharacterSelect';
+import { LoadingScreen } from '../components/LoadingScreen';
 import { Overworld } from '../components/Overworld';
 import { RetroBox } from '../components/RetroBox';
 
@@ -45,7 +46,7 @@ export default function App() {
     saveUser(updatedUser);
     setCurrentUser(updatedUser);
     setCurrentSession(updatedUser.username);
-    setView(AppView.OVERWORLD);
+    setView(AppView.LOADING);
   };
 
   const handleContinue = (fresh: boolean) => {
@@ -57,8 +58,12 @@ export default function App() {
       setView(AppView.INTRO);
     } else {
       setCurrentSession(currentUser.username);
-      setView(AppView.OVERWORLD);
+      setView(AppView.LOADING);
     }
+  };
+
+  const handleLoadComplete = () => {
+    setView(AppView.OVERWORLD);
   };
 
   return (
@@ -98,6 +103,10 @@ export default function App() {
 
       {view === AppView.CHAR_SELECT && (
         <CharacterSelect onSelected={handleCharacterSelected} />
+      )}
+
+      {view === AppView.LOADING && currentUser && (
+        <LoadingScreen onLoadComplete={handleLoadComplete} characterName={currentUser.username} />
       )}
 
       {view === AppView.OVERWORLD && currentUser && (
