@@ -165,6 +165,8 @@ export const Overworld: React.FC<OverworldProps> = ({
   );
   const [showGoalPicker, setShowGoalPicker] = useState(false);
   const [isTraveling, setIsTraveling] = useState(false);
+  const [workEarnings, setWorkEarnings] = useState<number | null>(null);
+  const [workCooldownEnd, setWorkCooldownEnd] = useState<number>(0);
 
   // Compute player stats from money history
   const playerStats = useMemo(() => computeStats(money), [money]);
@@ -256,6 +258,26 @@ export const Overworld: React.FC<OverworldProps> = ({
   const enterBuilding = () => {
     if (activeDoorId) {
       notifyDecision(activeDoorId, "yes");
+    }
+    
+    // Handle Work building - earn random $15-$20 with cooldown
+    if (activeDoorId === 'DOOR_WORK') {
+      const now = Date.now();
+      
+      // Check if still on cooldown
+      if (now < workCooldownEnd) {
+        const secondsLeft = Math.ceil((workCooldownEnd - now) / 1000);
+        alert(`You need to rest! Come back in ${secondsLeft} seconds.`);
+        closeDoor();
+        return;
+      }
+      
+      // Earn money and start 20 second cooldown
+      const earned = Math.floor(Math.random() * 6) + 15; // 15-20 inclusive
+      earnMoney(earned, 'work');
+      setWorkEarnings(earned);
+      setWorkCooldownEnd(now + 20000);
+      return;
     }
     
     // Check if it's a shop door
@@ -696,6 +718,59 @@ export const Overworld: React.FC<OverworldProps> = ({
                 }}
               >
                 Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WORK EARNINGS POPUP */}
+      {workEarnings !== null && (
+        <div className="absolute inset-0 z-30 bg-black/70 flex items-center justify-center p-4">
+          <div
+            className="max-w-sm w-full text-center"
+            style={{
+              backgroundColor: "#9ccce8",
+              border: "4px solid #5a98b8",
+              borderRadius: "8px",
+              boxShadow: "inset 2px 2px 0 #b8e0f0, inset -2px -2px 0 #4888a8, 8px 8px 0 rgba(0,0,0,0.3)",
+              fontFamily: '"Press Start 2P", monospace',
+            }}
+          >
+            <div
+              className="px-4 py-3"
+              style={{
+                backgroundColor: "#5a98b8",
+                borderRadius: "4px 4px 0 0",
+                borderBottom: "2px solid #4888a8",
+              }}
+            >
+              <span className="text-white text-xs font-bold">💼 Work Complete!</span>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="text-4xl">💰</div>
+              <p className="text-sm text-gray-700">Great job! You earned:</p>
+              <p className="text-2xl font-bold text-green-600">${workEarnings}</p>
+              <p className="text-[10px] text-gray-500">
+                New balance: ${money.balance.toFixed(2)}
+              </p>
+              <p className="text-[10px] text-gray-400">
+                Come back in 20 seconds to work again!
+              </p>
+              <button
+                onClick={() => {
+                  setWorkEarnings(null);
+                  closeDoor();
+                }}
+                className="w-full py-3 text-xs font-bold text-white"
+                style={{
+                  backgroundColor: "#4888b0",
+                  borderRadius: "20px",
+                  border: "3px solid #3070a0",
+                  boxShadow: "inset 0 2px 0 #68a8d0, inset 0 -2px 0 #285888",
+                }}
+              >
+                Awesome!
               </button>
             </div>
           </div>
