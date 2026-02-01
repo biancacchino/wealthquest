@@ -1,5 +1,6 @@
 import React from 'react';
 import { MoneyState, PlayerStats } from '../types';
+import { WalletIcon } from './PixelIcons';
 
 interface MoneyHUDProps {
   money: MoneyState;
@@ -44,7 +45,10 @@ export const MoneyHUD: React.FC<MoneyHUDProps> = ({
             borderBottom: '2px solid #4888a8'
           }}
         >
-          <span className="text-white text-[8px] font-bold tracking-wide">💰 MY MONEY</span>
+          <span className="text-white text-[8px] font-bold tracking-wide flex items-center gap-2">
+            <WalletIcon className="w-4 h-4 text-white" />
+            MY MONEY
+          </span>
         </div>
 
         {/* Content */}

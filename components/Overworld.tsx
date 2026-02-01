@@ -16,6 +16,7 @@ import { ENCOUNTERS } from "../phaser/data/encounters";
 import { MoneyHUD } from "./MoneyHUD";
 import { MONEY_GOALS } from "../constants";
 import { ShopPopup } from "./ShopPopup";
+import { BankPopup } from "./BankPopup";
 import { CoffeePopup } from "./CoffeePopup";
 import { COFFEE_SHOP_ITEMS } from "../constants";
 import { 
@@ -26,7 +27,12 @@ import {
   CoffeeIcon, 
   BankIcon, 
   ArcadeIcon, 
-  MallIcon 
+  MallIcon,
+  BreadIcon,
+  MilkIcon,
+  FruitIcon,
+  EggIcon,
+  MedicineIcon
 } from "./PixelIcons";
 
 // Mapping of Door IDs to display names
@@ -85,11 +91,11 @@ const BUS_STOPS = [
 
 // Market shop items
 const MARKET_SHOP_ITEMS = [
-  { id: "bread", name: "Bread", price: 2.0, emoji: "🍞", category: 'need' as EncounterCategory },
-  { id: "milk", name: "Milk", price: 1.5, emoji: "🥛", category: 'need' as EncounterCategory },
-  { id: "fruit", name: "Fruit", price: 2.5, emoji: "🍎", category: 'need' as EncounterCategory },
-  { id: "eggs", name: "Eggs", price: 1.8, emoji: "🥚", category: 'need' as EncounterCategory },
-  { id: "medicine", name: "Medicine", price: 5.0, emoji: "💊", category: 'need' as EncounterCategory },
+  { id: "bread", name: "Bread", price: 2.0, Icon: BreadIcon, category: 'need' as EncounterCategory },
+  { id: "milk", name: "Milk", price: 1.5, Icon: MilkIcon, category: 'need' as EncounterCategory },
+  { id: "fruit", name: "Fruit", price: 2.5, Icon: FruitIcon, category: 'need' as EncounterCategory },
+  { id: "eggs", name: "Eggs", price: 1.8, Icon: EggIcon, category: 'need' as EncounterCategory },
+  { id: "medicine", name: "Medicine", price: 5.0, Icon: MedicineIcon, category: 'need' as EncounterCategory },
 ];
 
 // Compute player stats from money state - reflects Wealthsimple's tone of insights, not scores
@@ -176,6 +182,7 @@ export const Overworld: React.FC<OverworldProps> = ({
   );
   const [activeDoorId, setActiveDoorId] = useState<string | null>(null);
   const [showShop, setShowShop] = useState(false);
+  const [showBank, setShowBank] = useState(false);
   const [modalStep, setModalStep] = useState<"choice" | "preview" | "result">(
     "choice",
   );
@@ -280,23 +287,40 @@ export const Overworld: React.FC<OverworldProps> = ({
     if (activeDoorId) {
       notifyDecision(activeDoorId, "yes");
     }
-    // For market door, show shop popup only after confirmation
-    if (activeDoorId === 'DOOR_MARKET') {
-      setShowShop(true);
+
+    // Handle Work building - earn random $15-$20 with cooldown
+    if (activeDoorId === 'DOOR_WORK') {
+      const now = Date.now();
+      
+      // Check if still on cooldown
+      if (now < workCooldownEnd) {
+        const secondsLeft = Math.ceil((workCooldownEnd - now) / 1000);
+        alert(`You need to rest! Come back in ${secondsLeft} seconds.`);
+        closeDoor();
+        return;
+      }
+      
+      // Earn money and start 20 second cooldown
+      const earned = Math.floor(Math.random() * 6) + 15; // 15-20 inclusive
+      earnMoney(earned, 'work');
+      setWorkEarnings(earned);
+      setWorkCooldownEnd(now + 20000);
       return;
     }
-    // For coffee shop door, show coffee popup only after confirmation
-    if (activeDoorId === 'DOOR_COFFEE') {
-      setShowShop(true);
-      return;
+
+    // Handle Bank
+    if (activeDoorId === 'DOOR_BANK') {
+        setShowBank(true);
+        return;
     }
-    
-    // Check if it's a shop door
-    if (activeDoorId === 'DOOR_MARKET' || activeDoorId === 'DOOR_MALL') {
+
+    // Handle Shops
+    if (activeDoorId === 'DOOR_MARKET' || activeDoorId === 'DOOR_MALL' || activeDoorId === 'DOOR_COFFEE') {
         setShowShop(true);
         // Do not close door yet, shop is an overlay
         return;
     }
+
     // TODO: Navigate to building Scene or Page
     console.log(`Entering ${DOOR_MAPPING[activeDoorId || ""]}`);
     alert(`Entered ${DOOR_MAPPING[activeDoorId || ""]}! (Placeholder)`);
@@ -396,6 +420,48 @@ export const Overworld: React.FC<OverworldProps> = ({
     };
     saveMoneyState(updatedMoney);
     return newBalance;
+  };
+
+  const handleDeposit = (amount: number) => {
+    if (amount > money.balance) return;
+    const newBankBalance = (money.bankBalance || 0) + amount;
+    const updatedMoney: MoneyState = {
+        ...money,
+        balance: money.balance - amount,
+        bankBalance: newBankBalance,
+        bankHistory: [
+          ...(money.bankHistory || []),
+          {
+            id: createEventId(),
+            type: 'deposit',
+            amount,
+            date: new Date().toISOString(),
+            balanceAfter: newBankBalance
+          }
+        ]
+    };
+    saveMoneyState(updatedMoney);
+  };
+
+  const handleWithdraw = (amount: number) => {
+    if (amount > (money.bankBalance || 0)) return;
+    const newBankBalance = (money.bankBalance || 0) - amount;
+    const updatedMoney: MoneyState = {
+        ...money,
+        balance: money.balance + amount,
+        bankBalance: newBankBalance,
+        bankHistory: [
+          ...(money.bankHistory || []),
+          {
+            id: createEventId(),
+            type: 'withdraw',
+            amount,
+            date: new Date().toISOString(),
+            balanceAfter: newBankBalance
+          }
+        ]
+    };
+    saveMoneyState(updatedMoney);
   };
 
   const applyChoice = (choice: "buy" | "skip") => {
@@ -859,6 +925,20 @@ export const Overworld: React.FC<OverworldProps> = ({
           </div>
         </div>
       )}
+      {/* BANK POPUP */}
+      {showBank && (
+        <BankPopup
+          cashBalance={money.balance}
+          bankBalance={money.bankBalance || 0}
+          history={[...(money.history || []), ...(money.bankHistory || [])]}
+          onDeposit={handleDeposit}
+          onWithdraw={handleWithdraw}
+          onClose={() => {
+            setShowBank(false);
+            closeDoor();
+          }}
+        />
+      )}
     </div>
   );
 };
@@ -869,12 +949,14 @@ const ensureMoneyState = (moneyState?: MoneyState): MoneyState => {
   }
   return {
     balance: 100,
+    bankBalance: 0,
     goal: {
       id: "headphones",
       label: "Headphones",
       cost: 60,
     },
     history: [],
+    bankHistory: [],
   };
 };
 
