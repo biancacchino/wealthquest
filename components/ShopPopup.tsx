@@ -29,7 +29,9 @@ export const ShopPopup: React.FC<ShopPopupProps> = ({
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
   const selectedItem = items.find((item) => item.id === selectedItemId);
-  const canAffordSelected = selectedItem ? userBalance >= selectedItem.price : false;
+  const canAffordSelected = selectedItem
+    ? userBalance >= selectedItem.price
+    : false;
 
   const handleBuy = () => {
     if (selectedItem && canAffordSelected) {
@@ -46,7 +48,8 @@ export const ShopPopup: React.FC<ShopPopupProps> = ({
           backgroundColor: "#5a98b8",
           border: "6px solid #3a7a98",
           borderRadius: "8px",
-          boxShadow: "inset 2px 2px 0 #7ab8d8, inset -2px -2px 0 #2a5a78, 8px 8px 0 rgba(0,0,0,0.5)",
+          boxShadow:
+            "inset 2px 2px 0 #7ab8d8, inset -2px -2px 0 #2a5a78, 8px 8px 0 rgba(0,0,0,0.5)",
           fontFamily: '"Press Start 2P", monospace',
         }}
       >
@@ -59,7 +62,9 @@ export const ShopPopup: React.FC<ShopPopupProps> = ({
             borderRadius: "2px 2px 0 0",
           }}
         >
-          <span className="text-white text-lg font-bold tracking-wide uppercase">{title}</span>
+          <span className="text-white text-lg font-bold tracking-wide uppercase">
+            {title}
+          </span>
           <button
             onClick={onCancel}
             className="text-white hover:text-yellow-300 text-2xl font-bold transition-colors"
@@ -77,31 +82,22 @@ export const ShopPopup: React.FC<ShopPopupProps> = ({
           }}
         >
           <div className="grid grid-cols-2 gap-6">
-            {/* Left Side - Image */}
+            {/* Left Side - Image/Emoji */}
             <div className="flex items-center justify-center">
-              {imagePath ? (
-                <img
-                  src={imagePath}
-                  alt={title}
-                  className="max-h-64 max-w-48 object-contain"
-                  style={{
-                    border: "4px solid #5a98b8",
-                    backgroundColor: "#e8f4f8",
-                    borderRadius: "4px",
-                  }}
-                />
-              ) : (
-                <div
-                  className="w-48 h-64 flex items-center justify-center text-4xl"
-                  style={{
-                    border: "4px solid #5a98b8",
-                    backgroundColor: "#e8f4f8",
-                    borderRadius: "4px",
-                  }}
-                >
-                  🛍️
-                </div>
-              )}
+              <div
+                className="w-64 h-80 flex justify-center"
+                style={{
+                  border: "4px solid #5a98b8",
+                  backgroundColor: "#e8f4f8",
+                  borderRadius: "4px",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "flex-start",
+                  alignItems: "center",
+                }}
+              >
+                <span style={{ fontSize: "12rem", lineHeight: 1, display: "block", marginTop: "1.5rem" }}>🛍️</span>
+              </div>
             </div>
 
             {/* Right Side - Items List */}
@@ -118,7 +114,7 @@ export const ShopPopup: React.FC<ShopPopupProps> = ({
                 What would you like to buy?
               </h3>
 
-              <div className="space-y-2 flex-1 overflow-y-auto">
+              <div className="space-y-2 flex-1">
                 {items.map((item) => {
                   const isSelected = selectedItemId === item.id;
                   const canAfford = userBalance >= item.price;
@@ -130,11 +126,15 @@ export const ShopPopup: React.FC<ShopPopupProps> = ({
                       onClick={() => setSelectedItemId(item.id)}
                       disabled={isDisabled}
                       className={`w-full text-left transition-all ${
-                        isDisabled ? "opacity-60 cursor-not-allowed" : "hover:scale-105 cursor-pointer"
+                        isDisabled
+                          ? "opacity-60 cursor-not-allowed"
+                          : "hover:scale-105 cursor-pointer"
                       }`}
                       style={{
                         backgroundColor: isSelected ? "#f0f87a" : "#fffef8",
-                        border: isSelected ? "3px solid #d4c854" : "2px solid #b8c8d8",
+                        border: isSelected
+                          ? "3px solid #d4c854"
+                          : "2px solid #b8c8d8",
                         borderRadius: "4px",
                         boxShadow: isSelected
                           ? "inset 2px 2px 0 #fffeb8, inset -2px -2px 0 #c4b84a"
@@ -143,11 +143,21 @@ export const ShopPopup: React.FC<ShopPopupProps> = ({
                       }}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold flex items-center gap-2" style={{ color: "#1a3a52" }}>
-                          {item.emoji && <span className="text-lg">{item.emoji}</span>}
+                        <span
+                          className="text-xs font-bold flex items-center gap-2"
+                          style={{ color: "#1a3a52" }}
+                        >
+                          {item.emoji && (
+                            <span className="text-lg">{item.emoji}</span>
+                          )}
                           {item.name}
                         </span>
-                        <span className="text-xs font-bold" style={{ color: "#1a3a52" }}>${item.price.toFixed(2)}</span>
+                        <span
+                          className="text-xs font-bold"
+                          style={{ color: "#1a3a52" }}
+                        >
+                          ${item.price.toFixed(2)}
+                        </span>
                       </div>
                     </button>
                   );
@@ -166,7 +176,10 @@ export const ShopPopup: React.FC<ShopPopupProps> = ({
                   }`}
                   style={{
                     borderRadius: "4px",
-                    boxShadow: selectedItem && canAffordSelected ? "inset 0 2px 0 rgba(255,255,255,0.3)" : "none",
+                    boxShadow:
+                      selectedItem && canAffordSelected
+                        ? "inset 0 2px 0 rgba(255,255,255,0.3)"
+                        : "none",
                   }}
                 >
                   Buy
