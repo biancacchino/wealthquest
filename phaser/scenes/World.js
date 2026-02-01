@@ -207,6 +207,8 @@ export class World extends Phaser.Scene {
     createDoor(1049, 738, 40, 60, 'DOOR_MALL');
     createDoor(1309, 743, 40, 60, 'DOOR_MOVIES');
     createDoor(1435, 738, 15, 30, 'DOOR_BUS_MOVIES', 0x800080);
+    // NEW MALL BUS STOP
+    createDoor(793, 689, 15, 30, 'DOOR_BUS_MALL', 0x800080);
 
     // Mall/Movie Walls
     createBuilding(830, 420, 500, 310, 'COLL_APARTMENT'); // Mall building
@@ -331,13 +333,14 @@ export class World extends Phaser.Scene {
       // RESTORE: If we have a saved position, put them back exactly there first
       if (this.savedPlayerPos) {
           // Use body.reset to properly teleport physics body and kill velocity
+          // Move back 30px to unsure we clear the sensor
           this.player.sprite.body.reset(
               this.savedPlayerPos.x, 
-              this.savedPlayerPos.y + 10 
+              this.savedPlayerPos.y + 30 
           );
       } else {
           // Fallback if no saved pos (rare)
-          this.player.sprite.y += 30;
+          this.player.sprite.y += 40;
           this.player.sprite.body.setVelocity(0, 0);
       }
   }
@@ -455,6 +458,31 @@ export class World extends Phaser.Scene {
 
   setMovementLocked(isLocked) {
     this.isMovementLocked = isLocked;
+  }
+
+  teleportPlayer(x, y) {
+      if (!this.player || !this.player.sprite) return;
+      
+      console.log(`Teleporting player to ${x}, ${y}`);
+      
+      // Clear saved position so we don't accidentally revert
+      this.savedPlayerPos = null;
+
+      // Update sprite position
+      this.player.sprite.body.reset(x, y);
+      
+      // Update camera immediately to new location
+      this.cameras.main.centerOn(x, y);
+      
+      // Update GameState grid position
+      const { tileSize } = World.MAP_CONFIG;
+      this.gameState.updatePlayerPosition(
+          Math.floor(x / tileSize), 
+          Math.floor(y / tileSize)
+      );
+
+      // Reset any triggers/cooldowns related to position if needed
+      this.currentOverlappingDoor = null;
   }
 
   markEncounterComplete(encounterId) {
