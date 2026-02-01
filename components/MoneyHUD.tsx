@@ -4,17 +4,16 @@ import { MoneyState } from '../types';
 interface MoneyHUDProps {
   money: MoneyState;
   onGoalClick: () => void;
-  onAllowanceClick?: () => void;
   className?: string;
 }
 
-export const MoneyHUD: React.FC<MoneyHUDProps> = ({ money, onGoalClick, onAllowanceClick, className = '' }) => {
+export const MoneyHUD: React.FC<MoneyHUDProps> = ({ 
+  money, 
+  onGoalClick, 
+  className = '' 
+}) => {
   const progressPercent = Math.min(100, (money.balance / money.goal.cost) * 100);
-  const daysUntilPayday = 7 - money.dayIndex;
   const amountNeeded = Math.max(0, money.goal.cost - money.balance);
-  const weeksToGoal = amountNeeded > 0 
-    ? Math.ceil(amountNeeded / money.weeklyAllowance) 
-    : 0;
 
   return (
     <div 
@@ -110,54 +109,22 @@ export const MoneyHUD: React.FC<MoneyHUDProps> = ({ money, onGoalClick, onAllowa
             </div>
           </button>
 
-          {/* Info Row */}
-          <div className="flex gap-2">
-            {/* Days until payday */}
-            <div
-              className="flex-1 p-2 text-center"
+          {/* Amount needed hint */}
+          {amountNeeded > 0 && (
+            <div 
+              className="text-center py-2 px-3"
               style={{
-                backgroundColor: '#e8f4e8',
-                border: '2px solid #a8d8a8',
-                borderRadius: '4px',
+                backgroundColor: '#4888b0',
+                borderRadius: '12px',
+                border: '2px solid #3070a0',
+                boxShadow: 'inset 0 2px 0 #68a8d0, inset 0 -2px 0 #285888',
               }}
             >
-              <div className="text-[7px] text-gray-500 uppercase">Payday</div>
-              <div className="text-[10px] text-gray-700 font-bold">
-                {daysUntilPayday === 0 ? 'Today!' : `${daysUntilPayday}d`}
-              </div>
+              <span className="text-[8px] text-white">
+                💼 Work to earn more!
+              </span>
             </div>
-
-            {/* Weeks to goal */}
-            <div
-              className="flex-1 p-2 text-center"
-              style={{
-                backgroundColor: '#f8f4e8',
-                border: '2px solid #d8c8a8',
-                borderRadius: '4px',
-              }}
-            >
-              <div className="text-[7px] text-gray-500 uppercase">ETA</div>
-              <div className="text-[10px] text-gray-700 font-bold">
-                {weeksToGoal === 0 ? 'Done!' : `${weeksToGoal}w`}
-              </div>
-            </div>
-          </div>
-
-          {/* Weekly Allowance Info */}
-          <button 
-            onClick={onAllowanceClick}
-            className="w-full text-center py-2 px-3 transition-transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-            style={{
-              backgroundColor: '#4888b0',
-              borderRadius: '12px',
-              border: '2px solid #3070a0',
-              boxShadow: 'inset 0 2px 0 #68a8d0, inset 0 -2px 0 #285888',
-            }}
-          >
-            <span className="text-[8px] text-white">
-              +${money.weeklyAllowance}/week allowance
-            </span>
-          </button>
+          )}
         </div>
       </div>
     </div>

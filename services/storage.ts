@@ -13,11 +13,8 @@ export const createInitialGameState = (): GameState => ({
 });
 
 const createInitialMoneyState = (): MoneyState => ({
-  weeklyAllowance: 20,
-  balance: 20,
+  balance: 25,
   goal: getDefaultGoal(),
-  dayIndex: 0,
-  weekNumber: 0,
   history: []
 });
 

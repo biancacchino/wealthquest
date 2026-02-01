@@ -49,7 +49,6 @@ export const Overworld: React.FC<OverworldProps> = ({
     ensureMoneyState(user.gameState.money),
   );
   const [showGoalPicker, setShowGoalPicker] = useState(false);
-  const [paydayToast, setPaydayToast] = useState<string | null>(null);
 
   useEffect(() => {
     setMoney(ensureMoneyState(user.gameState.money));
@@ -144,33 +143,6 @@ export const Overworld: React.FC<OverworldProps> = ({
     saveUser(updatedUser);
   };
 
-  // Advance day and handle weekly allowance cycle
-  const advanceDay = useCallback(() => {
-    const newDayIndex = money.dayIndex + 1;
-    
-    if (newDayIndex >= 7) {
-      // End of week - deposit allowance and reset
-      const newBalance = money.balance + money.weeklyAllowance;
-      const updatedMoney: MoneyState = {
-        ...money,
-        balance: newBalance,
-        dayIndex: 0,
-        weekNumber: (money.weekNumber || 0) + 1,
-      };
-      saveMoneyState(updatedMoney);
-      
-      // Show payday toast
-      setPaydayToast(`Allowance received: +$${money.weeklyAllowance}!`);
-      setTimeout(() => setPaydayToast(null), 3000);
-    } else {
-      const updatedMoney: MoneyState = {
-        ...money,
-        dayIndex: newDayIndex,
-      };
-      saveMoneyState(updatedMoney);
-    }
-  }, [money]);
-
   // Change savings goal
   const changeGoal = (goalId: string) => {
     const newGoal = MONEY_GOALS.find(g => g.id === goalId);
@@ -188,6 +160,17 @@ export const Overworld: React.FC<OverworldProps> = ({
     setShowGoalPicker(false);
   };
 
+  // Add money from working at encounters
+  const earnMoney = (amount: number, source: string) => {
+    const newBalance = money.balance + amount;
+    const updatedMoney: MoneyState = {
+      ...money,
+      balance: newBalance,
+    };
+    saveMoneyState(updatedMoney);
+    return newBalance;
+  };
+
   const applyChoice = (choice: "buy" | "skip") => {
     if (!activeEncounter) return;
 
@@ -195,22 +178,15 @@ export const Overworld: React.FC<OverworldProps> = ({
       choice === "buy"
         ? Math.max(0, money.balance - activeEncounter.cost)
         : money.balance;
-    const goalETAWeeks = calculateGoalETAWeeks(
-      newBalance,
-      money.weeklyAllowance,
-      money.goal.cost,
-    );
     const notes = activeEncounter.notes[choice];
 
     const event: ChoiceEvent = {
       id: createEventId(),
-      dayIndex: money.dayIndex,
       encounterId: activeEncounter.id,
       choice,
       cost: activeEncounter.cost,
       deltas: {
         balanceAfter: newBalance,
-        goalETAWeeks,
         notes,
       },
     };
@@ -218,7 +194,6 @@ export const Overworld: React.FC<OverworldProps> = ({
     const updatedMoney: MoneyState = {
       ...money,
       balance: newBalance,
-      dayIndex: Math.min(6, money.dayIndex + 1),
       history: [...money.history, event],
     };
 
@@ -233,20 +208,10 @@ export const Overworld: React.FC<OverworldProps> = ({
     const buyBalance = Math.max(0, money.balance - activeEncounter.cost);
     const skipBalance = money.balance;
     return {
-      buyETA: calculateGoalETAWeeks(
-        buyBalance,
-        money.weeklyAllowance,
-        money.goal.cost,
-      ),
-      skipETA: calculateGoalETAWeeks(
-        skipBalance,
-        money.weeklyAllowance,
-        money.goal.cost,
-      ),
       buyBalance,
       skipBalance,
     };
-  }, [activeEncounter, money.balance, money.weeklyAllowance, money.goal.cost]);
+  }, [activeEncounter, money.balance]);
 
 
 
@@ -256,45 +221,8 @@ export const Overworld: React.FC<OverworldProps> = ({
             <MoneyHUD 
               money={money} 
               onGoalClick={() => setShowGoalPicker(true)}
-              onAllowanceClick={() => {
-                // Trigger payday manually for testing/demo, or show info
-                const daysLeft = 7 - money.dayIndex;
-                if (daysLeft === 0) {
-                  // It's payday! Deposit allowance
-                  const newBalance = money.balance + money.weeklyAllowance;
-                  const updatedMoney: MoneyState = {
-                    ...money,
-                    balance: newBalance,
-                    dayIndex: 0,
-                    weekNumber: (money.weekNumber || 0) + 1,
-                  };
-                  saveMoneyState(updatedMoney);
-                  setPaydayToast(`Allowance received: +$${money.weeklyAllowance}!`);
-                  setTimeout(() => setPaydayToast(null), 3000);
-                } else {
-                  setPaydayToast(`${daysLeft} day${daysLeft > 1 ? 's' : ''} until payday!`);
-                  setTimeout(() => setPaydayToast(null), 2000);
-                }
-              }}
               className="absolute top-4 right-4 z-50 pointer-events-auto"
             />
-
-            {/* Payday Toast Notification */}
-            {paydayToast && (
-              <div 
-                className="absolute top-4 left-1/2 -translate-x-1/2 z-30 animate-bounce pointer-events-none"
-                style={{
-                  backgroundColor: '#4ade80',
-                  border: '3px solid #22c55e',
-                  borderRadius: '8px',
-                  padding: '12px 24px',
-                  boxShadow: '0 4px 0 #16a34a, 4px 4px 0 rgba(0,0,0,0.2)',
-                  fontFamily: '"Press Start 2P", monospace',
-                }}
-              >
-                <span className="text-white text-xs font-bold">💵 {paydayToast}</span>
-              </div>
-            )}
 
             <div className="flex-1 flex flex-col lg:flex-row items-center justify-center gap-8 p-6">
                 <PhaserGame
@@ -337,15 +265,15 @@ export const Overworld: React.FC<OverworldProps> = ({
 
               {modalStep === "preview" && preview && (
                 <div className="space-y-3 text-sm">
-                  <p className="font-bold">Quick preview (next 2–3 days)</p>
+                  <p className="font-bold">Quick preview</p>
                   <div className="bg-gray-100 text-black p-3 border-2 border-black">
                     <p>
-                      Buy: balance ${preview.buyBalance}, goal ETA{" "}
-                      {preview.buyETA} weeks
+                      Buy: balance ${preview.buyBalance}
+                      {preview.buyBalance >= money.goal.cost && " ✓ Can afford goal!"}
                     </p>
                     <p>
-                      Skip: balance ${preview.skipBalance}, goal ETA{" "}
-                      {preview.skipETA} weeks
+                      Skip: balance ${preview.skipBalance}
+                      {preview.skipBalance >= money.goal.cost && " ✓ Can afford goal!"}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -369,13 +297,9 @@ export const Overworld: React.FC<OverworldProps> = ({
                   </ul>
                   <p>Balance now: ${money.balance}</p>
                   <p>
-                    Goal ETA:{" "}
-                    {calculateGoalETAWeeks(
-                      money.balance,
-                      money.weeklyAllowance,
-                      money.goal.cost,
-                    )}{" "}
-                    weeks
+                    {money.balance >= money.goal.cost 
+                      ? "🎉 You can afford your goal!" 
+                      : `$${money.goal.cost - money.balance} more to reach your goal`}
                   </p>
                   <button
                     onClick={closeEncounter}
@@ -528,9 +452,7 @@ export const Overworld: React.FC<OverworldProps> = ({
                 {MONEY_GOALS.map((goal) => {
                   const isCurrentGoal = money.goal.id === goal.id;
                   const progressPercent = Math.min(100, (money.balance / goal.cost) * 100);
-                  const weeksToGoal = goal.cost <= money.balance 
-                    ? 0 
-                    : Math.ceil((goal.cost - money.balance) / money.weeklyAllowance);
+                  const amountNeeded = Math.max(0, goal.cost - money.balance);
 
                   return (
                     <button
@@ -576,7 +498,7 @@ export const Overworld: React.FC<OverworldProps> = ({
                         
                         <div className="flex justify-between text-[8px] text-gray-500">
                           <span>${money.balance} saved</span>
-                          <span>{weeksToGoal === 0 ? '✓ Ready!' : `~${weeksToGoal} weeks`}</span>
+                          <span>{amountNeeded === 0 ? '✓ Ready!' : `$${amountNeeded} to go`}</span>
                         </div>
                         
                         {isCurrentGoal && (
@@ -614,34 +536,17 @@ export const Overworld: React.FC<OverworldProps> = ({
 
 const ensureMoneyState = (moneyState?: MoneyState): MoneyState => {
   if (moneyState) {
-    // Ensure weekNumber exists for backwards compatibility
-    return {
-      ...moneyState,
-      weekNumber: moneyState.weekNumber ?? 0,
-    };
+    return moneyState;
   }
   return {
-    weeklyAllowance: 20,
-    balance: 20,
+    balance: 100,
     goal: {
       id: "headphones",
       label: "Headphones",
       cost: 60,
     },
-    dayIndex: 0,
-    weekNumber: 0,
     history: [],
   };
-};
-
-const calculateGoalETAWeeks = (
-  balance: number,
-  weeklyAllowance: number,
-  goalCost: number,
-) => {
-  if (goalCost <= balance) return 0;
-  if (weeklyAllowance <= 0) return 99;
-  return Math.ceil((goalCost - balance) / weeklyAllowance);
 };
 
 const createEventId = () => {

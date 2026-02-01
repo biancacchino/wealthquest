@@ -27,24 +27,19 @@ export interface MoneyGoal {
 
 export interface ChoiceEvent {
   id: string;
-  dayIndex: number;
   encounterId: string;
   choice: 'buy' | 'skip';
   cost: number;
   reflection?: 'yes' | 'unsure' | 'no';
   deltas: {
     balanceAfter: number;
-    goalETAWeeks: number;
     notes: string[];
   };
 }
 
 export interface MoneyState {
-  weeklyAllowance: number;
   balance: number;
   goal: MoneyGoal;
-  dayIndex: number;
-  weekNumber: number;
   history: ChoiceEvent[];
 }
 
