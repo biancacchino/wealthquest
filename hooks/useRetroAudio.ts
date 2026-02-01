@@ -22,7 +22,7 @@ export const useRetroAudio = () => {
         };
     }, []);
 
-    const playTone = (freq: number, type: OscillatorType, duration: number, volume: number = 0.1) => {
+    const playTone = useCallback((freq: number, type: OscillatorType, duration: number, volume: number = 0.1) => {
         if (!audioContextRef.current) return;
         
         const ctx = audioContextRef.current;
@@ -40,11 +40,11 @@ export const useRetroAudio = () => {
 
         osc.start();
         osc.stop(ctx.currentTime + duration);
-    };
+    }, []);
 
-    const playBlip = () => playTone(600, 'square', 0.1);
-    const playSelect = () => playTone(440, 'sine', 0.1);
-    const playCoin = () => {
+    const playBlip = useCallback(() => playTone(600, 'square', 0.1), [playTone]);
+    const playSelect = useCallback(() => playTone(440, 'sine', 0.1), [playTone]);
+    const playCoin = useCallback(() => {
         if (!audioContextRef.current) return;
         const ctx = audioContextRef.current;
         const now = ctx.currentTime;
@@ -64,12 +64,12 @@ export const useRetroAudio = () => {
         
         osc.start();
         osc.stop(now + 0.3);
-    };
+    }, []);
 
-    const playError = () => playTone(150, 'sawtooth', 0.3);
+    const playError = useCallback(() => playTone(150, 'sawtooth', 0.3), [playTone]);
 
     // New SFX
-    const playFootstep = () => {
+    const playFootstep = useCallback(() => {
         // Short, soft click
         if (!audioContextRef.current) return;
         const ctx = audioContextRef.current;
@@ -88,9 +88,9 @@ export const useRetroAudio = () => {
         gain.connect(ctx.destination);
         osc.start();
         osc.stop(ctx.currentTime + 0.06);
-    };
+    }, []);
 
-    const playMoneyGained = () => {
+    const playMoneyGained = useCallback(() => {
         // "Ding-ding"
         if (!audioContextRef.current) return;
         const ctx = audioContextRef.current;
@@ -111,9 +111,9 @@ export const useRetroAudio = () => {
         gain.connect(ctx.destination);
         osc.start();
         osc.stop(now + 0.5);
-    };
+    }, []);
 
-    const playMoneySpent = () => {
+    const playMoneySpent = useCallback(() => {
         if (!audioContextRef.current) return;
         const ctx = audioContextRef.current;
         const now = ctx.currentTime;
@@ -131,11 +131,11 @@ export const useRetroAudio = () => {
         gain.connect(ctx.destination);
         osc.start();
         osc.stop(now + 0.2);
-    };
+    }, []);
 
     const playStorePurchase = playMoneySpent; // Alias
 
-    const playInvestmentMade = () => {
+    const playInvestmentMade = useCallback(() => {
          // Major triad arpeggio
          if (!audioContextRef.current) return;
          const ctx = audioContextRef.current;
@@ -158,9 +158,9 @@ export const useRetroAudio = () => {
              osc.start(startTime);
              osc.stop(startTime + 0.4);
          });
-    };
+    }, []);
 
-    const playEnterBuilding = () => {
+    const playEnterBuilding = useCallback(() => {
          // Whoosh slide up
          if (!audioContextRef.current) return;
          const ctx = audioContextRef.current;
@@ -180,16 +180,15 @@ export const useRetroAudio = () => {
          gain.connect(ctx.destination);
          osc.start();
          osc.stop(now + 0.3);
-    };
+    }, []);
 
-    const playSleep = () => {
+    const playSleep = useCallback(() => {
         // Lullaby descending
         if (!audioContextRef.current) return;
         const ctx = audioContextRef.current;
         const now = ctx.currentTime;
         
-         // E5, D5, C5
-        [659.25, 587.33, 523.25].forEach((freq, i) => { 
+        [659.25, 587.33, 523.25].forEach((freq, i) => { // E, D, C
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
             
@@ -206,7 +205,7 @@ export const useRetroAudio = () => {
             osc.start(startTime);
             osc.stop(startTime + 1.2);
         });
-   };
+   }, []);
 
 
     const startBackgroundMusic = useCallback(() => {

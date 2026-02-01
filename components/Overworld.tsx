@@ -276,20 +276,16 @@ export const Overworld: React.FC<OverworldProps> = ({
   );
   const [showGoalPicker, setShowGoalPicker] = useState(false);
   const [isTraveling, setIsTraveling] = useState(false);
+  const [showBeach, setShowBeach] = useState(false);
   const [workEarnings, setWorkEarnings] = useState<number | null>(null);
   const [workCooldownEnd, setWorkCooldownEnd] = useState<number>(0);
-  
-  // Goal reached popup state
-  const [showGoalReachedPopup, setShowGoalReachedPopup] = useState(false);
-  // Track the balance when we last showed the prompt (to allow re-prompt after earning more)
-  const goalPromptShownAtBalanceRef = useRef<number>(-1);
-  const { 
-      startBackgroundMusic, 
-      playFootstep, 
-      playMoneyGained,
-      playInvestmentMade,
-      playEnterBuilding,
-      playSleep
+  const {
+    startBackgroundMusic,
+    playFootstep,
+    playMoneyGained,
+    playInvestmentMade,
+    playEnterBuilding,
+    playSleep,
   } = useRetroAudio();
 
   // Compute player stats from money history
@@ -298,17 +294,17 @@ export const Overworld: React.FC<OverworldProps> = ({
   useEffect(() => {
     // Attempt to start music on mount (or first interaction dependent)
     const handleInteraction = () => {
-        startBackgroundMusic();
-        window.removeEventListener('click', handleInteraction);
-        window.removeEventListener('keydown', handleInteraction);
+      startBackgroundMusic();
+      window.removeEventListener("click", handleInteraction);
+      window.removeEventListener("keydown", handleInteraction);
     };
 
-    window.addEventListener('click', handleInteraction);
-    window.addEventListener('keydown', handleInteraction);
-    
+    window.addEventListener("click", handleInteraction);
+    window.addEventListener("keydown", handleInteraction);
+
     return () => {
-        window.removeEventListener('click', handleInteraction);
-        window.removeEventListener('keydown', handleInteraction);
+      window.removeEventListener("click", handleInteraction);
+      window.removeEventListener("keydown", handleInteraction);
     };
   }, [startBackgroundMusic]);
 
@@ -471,6 +467,11 @@ export const Overworld: React.FC<OverworldProps> = ({
       return;
     }
 
+    if (activeDoorId === "DOOR_BEACH") {
+      setShowBeach(true);
+      return;
+    }
+
     if (activeDoorId === "DOOR_APARTMENT") {
       setShowApartmentRest(true);
       return;
@@ -591,7 +592,7 @@ export const Overworld: React.FC<OverworldProps> = ({
       Math.round(Math.max(0, money.balance - totalCost) * 100) / 100;
 
     // Create choice events for each item to record in history
-    const newEvents: ChoiceEvent[] = items.map(item => ({
+    const newEvents: ChoiceEvent[] = items.map((item) => ({
       id: createEventId(),
       encounterId: activeDoorId || activeEncounterId || `shop_${item.id}`,
       choice: "buy",
@@ -724,9 +725,8 @@ export const Overworld: React.FC<OverworldProps> = ({
 
   const handleInvest = (type: InvestmentType, amount: number) => {
     if (amount > money.balance) return;
-playInvestmentMade();
+    playInvestmentMade();
 
-    
     // Create new portfolio object
     const currentAmount = money.portfolio?.[type] || 0;
     const newPortfolio = {
@@ -847,6 +847,7 @@ playInvestmentMade();
       {activeDoorId &&
         !activeDoorId.includes("DOOR_BUS") &&
         !showShop &&
+        !showBeach &&
         !showLibraryMenu &&
         !showApartmentRest && (
           <div className="absolute inset-0 z-20 bg-black/70 flex items-center justify-center p-4">
@@ -1082,9 +1083,12 @@ playInvestmentMade();
       )}
 
       {/* BEACH POPUP */}
-      {activeDoorId === "DOOR_BEACH" && (
+      {showBeach && activeDoorId === "DOOR_BEACH" && (
         <BeachPopup
-          onClose={closeDoor}
+          onClose={() => {
+            setShowBeach(false);
+            closeDoor();
+          }}
         />
       )}
 
