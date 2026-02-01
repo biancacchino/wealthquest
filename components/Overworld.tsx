@@ -137,17 +137,18 @@ export const Overworld: React.FC<OverworldProps> = ({
 
   const handleEncounter = useCallback(
     (encounterId: string) => {
-      // Check if it's a door (including market)
-      if (DOOR_MAPPING[encounterId]) {
-        setActiveDoorId(encounterId);
-        setMovementLocked(true);
-        return;
-      }
-
-      // Otherwise handle as normal shop encounter
-      setActiveEncounterId(encounterId);
-      setShowShop(true);
+    // Check if it's a door (including market)
+    if (DOOR_MAPPING[encounterId]) {
+      setActiveDoorId(encounterId);
       setMovementLocked(true);
+      // For market door, do NOT show shop immediately; wait for confirmation
+      return;
+    }
+
+    // Otherwise handle as normal shop encounter
+    setActiveEncounterId(encounterId);
+    setShowShop(true);
+    setMovementLocked(true);
     },
     [setMovementLocked],
   );
@@ -186,11 +187,16 @@ export const Overworld: React.FC<OverworldProps> = ({
       notifyDecision(activeDoorId, "yes");
     }
     
-    // Check if it's a shop door
-    if (activeDoorId === 'DOOR_MARKET' || activeDoorId === 'DOOR_MALL') {
-        setShowShop(true);
-        // Do not close door yet, shop is an overlay
-        return;
+    // For market door, show shop popup only after confirmation
+    if (activeDoorId === 'DOOR_MARKET') {
+      setShowShop(true);
+      // Do not close door yet, shop is an overlay
+      return;
+    }
+    // For mall, keep previous logic
+    if (activeDoorId === 'DOOR_MALL') {
+      setShowShop(true);
+      return;
     }
 
     // TODO: Navigate to building Scene or Page
@@ -360,6 +366,39 @@ export const Overworld: React.FC<OverworldProps> = ({
           </RetroBox>
         </div>
       )}
+        {activeDoorId && !activeDoorId.includes("DOOR_BUS") && !showShop && (
+          <div className="absolute inset-0 z-20 bg-black/70 flex items-center justify-center p-4">
+            <RetroBox
+              title={DOOR_MAPPING[activeDoorId] || activeDoorId}
+              className="max-w-sm w-full text-black"
+            >
+              <div className="space-y-6 text-center">
+                <p className="text-sm">
+                  Would you like to enter{" "}
+                  <strong>{DOOR_MAPPING[activeDoorId] || activeDoorId}</strong>?
+                </p>
+
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={enterBuilding}
+                    className="bg-green-600 hover:bg-green-500 text-white p-3 uppercase text-xs font-bold border-2 border-black transition-colors"
+                  >
+                    Yes, Enter
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (activeDoorId) notifyDecision(activeDoorId, "no");
+                      closeDoor();
+                    }}
+                    className="bg-red-600 hover:bg-red-500 text-white p-3 uppercase text-xs font-bold border-2 border-black transition-colors"
+                  >
+                    No, Stay Outside
+                  </button>
+                </div>
+              </div>
+            </RetroBox>
+          </div>
+        )}
 
       {/* BUS STOP SPECIAL POPUP */}
       {activeDoorId && activeDoorId.includes("DOOR_BUS") && (
