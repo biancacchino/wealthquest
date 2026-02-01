@@ -8,20 +8,38 @@ import React, {
   useState,
 } from "react";
 import type Phaser from "phaser";
-import { UserProfile, MoneyState, ChoiceEvent, PlayerStats, EncounterCategory, InvestmentType } from "../types";
-import { clearSession, saveUser, simulateMarketStep } from "../services/storage";
+import {
+  UserProfile,
+  MoneyState,
+  ChoiceEvent,
+  PlayerStats,
+  EncounterCategory,
+  InvestmentType,
+} from "../types";
+import {
+  clearSession,
+  saveUser,
+  simulateMarketStep,
+} from "../services/storage";
 import { RetroBox } from "./RetroBox";
 import { PhaserGame } from "./PhaserGame";
 import { ENCOUNTERS } from "../phaser/data/encounters";
 import { MoneyHUD } from "./MoneyHUD";
 import { MONEY_GOALS } from "../constants";
-import { ShopPopup } from "./ShopPopup";
+import { ShopCartPopup, ShopItem } from "./ShopCartPopup";
+import { BeachPopup } from "./BeachPopup";
+import { useRetroAudio } from "../hooks/useRetroAudio";
 import { BankPopup } from "./BankPopup";
 import { NysePopup } from "./NysePopup";
-import { CoffeePopup } from "./CoffeePopup";
 import { LibraryPopup } from "./LibraryPopup";
 import { ApartmentRestPopup } from "./ApartmentRestPopup";
-import { COFFEE_SHOP_ITEMS } from "../constants";
+import {
+  COFFEE_SHOP_ITEMS,
+  MALL_SHOP_ITEMS,
+  PIZZA_SHOP_ITEMS,
+  ARCADE_SHOP_ITEMS,
+  MOVIES_SHOP_ITEMS,
+} from "../constants";
 import {
   BusIcon,
   MovieIcon,
@@ -93,41 +111,41 @@ const BUS_STOPS = [
 ];
 
 // Market shop items
-const MARKET_SHOP_ITEMS = [
+const MARKET_SHOP_ITEMS: ShopItem[] = [
   {
     id: "bread",
     name: "Bread",
     price: 2.0,
-    Icon: BreadIcon,
-    category: "need" as EncounterCategory,
+    iconName: "BreadIcon",
+    category: "need",
   },
   {
     id: "milk",
     name: "Milk",
     price: 1.5,
-    Icon: MilkIcon,
-    category: "need" as EncounterCategory,
+    iconName: "MilkIcon",
+    category: "need",
   },
   {
     id: "fruit",
     name: "Fruit",
     price: 2.5,
-    Icon: FruitIcon,
-    category: "need" as EncounterCategory,
+    iconName: "FruitIcon",
+    category: "need",
   },
   {
     id: "eggs",
     name: "Eggs",
     price: 1.8,
-    Icon: EggIcon,
-    category: "need" as EncounterCategory,
+    iconName: "EggIcon",
+    category: "need",
   },
   {
     id: "medicine",
     name: "Medicine",
     price: 5.0,
-    Icon: MedicineIcon,
-    category: "need" as EncounterCategory,
+    iconName: "MedicineIcon",
+    category: "need",
   },
 ];
 
@@ -169,36 +187,36 @@ const computeStats = (money: MoneyState): PlayerStats => {
 
   // --- Financial Mindfulness ---
   // Measures: needs vs wants ratio (weighted by cost), balanced decisions, variety of choices
-  
-  const purchases = history.filter(e => e.choice === 'buy');
-  
+
+  const purchases = history.filter((e) => e.choice === "buy");
+
   // Cost-weighted needs score: larger purchases have more impact
   let needsScore = 50;
   if (purchases.length > 0) {
     const totalSpent = purchases.reduce((sum, e) => sum + (e.cost || 0), 0);
-    
+
     if (totalSpent > 0) {
       // Weight each category by its cost contribution
       // Needs = +1.0, Social = random 0.3-0.5 (slightly negative to neutral), Wants = 0
       let weightedSum = 0;
-      purchases.forEach(e => {
+      purchases.forEach((e) => {
         const cost = e.cost || 0;
         let categoryWeight = 0;
-        
-        if (e.category === 'need') {
+
+        if (e.category === "need") {
           categoryWeight = 1.0;
-        } else if (e.category === 'social') {
+        } else if (e.category === "social") {
           // Random between slightly negative (0.3) and neutral (0.5)
           categoryWeight = Math.random() < 0.5 ? 0.3 : 0.5;
         } else {
           // 'want' category
           categoryWeight = 0;
         }
-        
+
         // Weight by cost relative to total spending
         weightedSum += categoryWeight * (cost / totalSpent);
       });
-      
+
       needsScore = Math.min(100, weightedSum * 100);
     }
   }
@@ -253,9 +271,34 @@ export const Overworld: React.FC<OverworldProps> = ({
   const [isTraveling, setIsTraveling] = useState(false);
   const [workEarnings, setWorkEarnings] = useState<number | null>(null);
   const [workCooldownEnd, setWorkCooldownEnd] = useState<number>(0);
+  const { 
+      startBackgroundMusic, 
+      playFootstep, 
+      playMoneyGained,
+      playInvestmentMade,
+      playEnterBuilding,
+      playSleep
+  } = useRetroAudio();
 
   // Compute player stats from money history
   const playerStats = useMemo(() => computeStats(money), [money]);
+
+  useEffect(() => {
+    // Attempt to start music on mount (or first interaction dependent)
+    const handleInteraction = () => {
+        startBackgroundMusic();
+        window.removeEventListener('click', handleInteraction);
+        window.removeEventListener('keydown', handleInteraction);
+    };
+
+    window.addEventListener('click', handleInteraction);
+    window.addEventListener('keydown', handleInteraction);
+    
+    return () => {
+        window.removeEventListener('click', handleInteraction);
+        window.removeEventListener('keydown', handleInteraction);
+    };
+  }, [startBackgroundMusic]);
 
   useEffect(() => {
     setMoney(ensureMoneyState(user.gameState.money));
@@ -349,6 +392,14 @@ export const Overworld: React.FC<OverworldProps> = ({
       notifyDecision(activeDoorId, "yes");
     }
 
+    if (activeDoorId === "DOOR_APARTMENT") {
+      playSleep();
+      setShowApartmentRest(true);
+      return;
+    }
+
+    playEnterBuilding();
+
     if (activeDoorId === "DOOR_LIBRARY") {
       setShowLibraryMenu(true);
       return;
@@ -392,16 +443,23 @@ export const Overworld: React.FC<OverworldProps> = ({
     }
 
     // Handle NYSE
-    if (activeDoorId === 'DOOR_NYSE') {
-        setShowNyse(true);
-        return;
+    if (activeDoorId === "DOOR_NYSE") {
+      setShowNyse(true);
+      return;
     }
 
     // Handle Shops
-    if (activeDoorId === 'DOOR_MARKET' || activeDoorId === 'DOOR_MALL' || activeDoorId === 'DOOR_COFFEE' || activeDoorId === 'DOOR_MOVIES' || activeDoorId === 'DOOR_ARCADE' || activeDoorId === 'DOOR_PIZZA') {
-        setShowShop(true);
-        // Do not close door yet, shop is an overlay
-        return;
+    if (
+      activeDoorId === "DOOR_MARKET" ||
+      activeDoorId === "DOOR_MALL" ||
+      activeDoorId === "DOOR_COFFEE" ||
+      activeDoorId === "DOOR_MOVIES" ||
+      activeDoorId === "DOOR_ARCADE" ||
+      activeDoorId === "DOOR_PIZZA"
+    ) {
+      setShowShop(true);
+      // Do not close door yet, shop is an overlay
+      return;
     }
 
     // TODO: Navigate to building Scene or Page
@@ -457,33 +515,36 @@ export const Overworld: React.FC<OverworldProps> = ({
     saveMoneyState(nextMoney);
   }, [money, user]); // Added user dependency as saveMoneyState uses it
 
-  const handleShopPurchase = (
-    itemId: string,
-    itemName: string,
-    price: number,
-    category: EncounterCategory = 'want',
-  ) => {
+  const handleShopPurchase = (items: ShopItem[]) => {
+    // Calculate total price
+    const totalCost = items.reduce((sum, item) => sum + item.price, 0);
+
     // Round to 2 decimal places to avoid floating point issues
     // Deduct from balance (money on hand)
-    const newBalance = Math.round(Math.max(0, money.balance - price) * 100) / 100;
-    
-    // Create a choice event to record in history (affects stats)
-    const event: ChoiceEvent = {
+    const newBalance =
+      Math.round(Math.max(0, money.balance - totalCost) * 100) / 100;
+
+    // Create choice events for each item to record in history
+    const newEvents: ChoiceEvent[] = items.map(item => ({
       id: createEventId(),
-      encounterId: activeDoorId || activeEncounterId || `shop_${itemId}`,
-      choice: 'buy',
-      cost: price,
-      category: category,
+      encounterId: activeDoorId || activeEncounterId || `shop_${item.id}`,
+      choice: "buy",
+      cost: item.price,
+      // Default category to 'want' if not provided, though our ShopItem type has it optional.
+      // Casting to EncounterCategory to match type expectation
+      category: (item.category || "want") as EncounterCategory,
       deltas: {
-        balanceAfter: newBalance,
-        notes: [`Purchased ${itemName} for $${price.toFixed(2)}`],
+        balanceAfter: newBalance, // technically this balance is after ALL purchases, but for history tracking individual items it's tricky.
+        //Ideally we'd track the batch. For simplicity, we'll log the final balance on each or just the last one?
+        // Let's just put the final balance on them.
+        notes: [`Purchased ${item.name} for $${item.price.toFixed(2)}`],
       },
-    };
-    
+    }));
+
     const updatedMoney: MoneyState = {
       ...money,
       balance: newBalance,
-      history: [...money.history, event],
+      history: [...money.history, ...newEvents],
     };
     saveMoneyState(updatedMoney);
 
@@ -518,6 +579,7 @@ export const Overworld: React.FC<OverworldProps> = ({
 
   // Add money from working - goes to balance (money on hand)
   const earnMoney = (amount: number, source: string) => {
+    playMoneyGained();
     const newBalance = Math.round((money.balance + amount) * 100) / 100;
     const updatedMoney: MoneyState = {
       ...money,
@@ -596,6 +658,8 @@ export const Overworld: React.FC<OverworldProps> = ({
 
   const handleInvest = (type: InvestmentType, amount: number) => {
     if (amount > money.balance) return;
+playInvestmentMade();
+
     
     // Create new portfolio object
     const currentAmount = money.portfolio?.[type] || 0;
@@ -607,16 +671,16 @@ export const Overworld: React.FC<OverworldProps> = ({
         crypto: 0,
         minerals: 0,
         real_estate: 0,
-        options: 0
+        options: 0,
       }),
-      [type]: currentAmount + amount
+      [type]: currentAmount + amount,
     };
 
     const updatedMoney: MoneyState = {
       ...money,
       balance: Math.round((money.balance - amount) * 100) / 100,
       portfolio: newPortfolio,
-      // We could add to history here but bankHistory is separate. 
+      // We could add to history here but bankHistory is separate.
       // Maybe we need an investmentHistory? For now, we just track balance.
     };
     saveMoneyState(updatedMoney);
@@ -674,6 +738,7 @@ export const Overworld: React.FC<OverworldProps> = ({
           onEncounter={handleEncounter}
           onReady={handleGameReady}
           characterId={user.characterId}
+          onFootstep={playFootstep}
         />
       </div>
 
@@ -858,88 +923,112 @@ export const Overworld: React.FC<OverworldProps> = ({
         </div>
       )}
 
-      {/* SHOP POPUP FOR ENCOUNTERS */}
-      {showShop && activeEncounterId && activeEncounter && (
-        <ShopPopup
+      {/* SHOCartPopup
           title={activeEncounter.title}
-          items={activeEncounter.shopItems}
+          items={activeEncounter.shopItems.map(item => ({ 
+              ...item, 
+              iconName: undefined // Mapping legacy items to new format if needed, or update legacy data
+          }))}
           userBalance={money.balance}
           bankBalance={money.bankBalance}
           onPurchase={handleShopPurchase}
           onCancel={closeEncounter}
+          shopType={"MARKET"} // Fallback
         />
       )}
 
       {/* SHOP POPUP FOR MARKET DOOR */}
       {showShop && activeDoorId === "DOOR_MARKET" && (
-        <ShopPopup
+        <ShopCartPopup
           title="Market"
           items={MARKET_SHOP_ITEMS}
           userBalance={money.balance}
           bankBalance={money.bankBalance}
           onPurchase={handleShopPurchase}
           onCancel={closeDoor}
+          shopType="MARKET"
         />
       )}
 
       {/* COFFEE POPUP FOR COFFEE SHOP DOOR */}
       {showShop && activeDoorId === "DOOR_COFFEE" && (
-        <CoffeePopup
+        <ShopCartPopup
           title="Coffee Shop"
           items={COFFEE_SHOP_ITEMS}
           userBalance={money.balance}
           bankBalance={money.bankBalance}
           onPurchase={handleShopPurchase}
           onCancel={closeDoor}
-          imagePath={"/assets/ui/coffee-bar.png"}
+          shopType="COFFEE"
         />
       )}
 
       {/* MALL POPUP FOR MALL DOOR */}
       {showShop && activeDoorId === "DOOR_MALL" && (
-        <MallPopup
+        <ShopCartPopup
           title="Mall"
           items={MALL_SHOP_ITEMS}
           userBalance={money.balance}
           bankBalance={money.bankBalance}
           onPurchase={handleShopPurchase}
           onCancel={closeDoor}
+          shopType="MALL"
         />
       )}
 
       {/* MOVIES POPUP FOR MOVIES DOOR */}
       {showShop && activeDoorId === "DOOR_MOVIES" && (
-        <MoviesPopup
+        <ShopCartPopup
           title="Movies"
           items={MOVIES_SHOP_ITEMS}
           userBalance={money.balance}
           bankBalance={money.bankBalance}
           onPurchase={handleShopPurchase}
           onCancel={closeDoor}
+          shopType="MOVIES"
         />
       )}
 
       {/* ARCADE POPUP FOR ARCADE DOOR */}
       {showShop && activeDoorId === "DOOR_ARCADE" && (
-        <ArcadePopup
+        <ShopCartPopup
           title="Arcade"
           items={ARCADE_SHOP_ITEMS}
           userBalance={money.balance}
           bankBalance={money.bankBalance}
           onPurchase={handleShopPurchase}
           onCancel={closeDoor}
+          shopType="MALL" // Arcade fits general mall/fun vibe
         />
       )}
 
       {/* PIZZA POPUP FOR PIZZA SHOP DOOR */}
       {showShop && activeDoorId === "DOOR_PIZZA" && (
-        <PizzaPopup
+        <ShopCartPopup
           title="Pizza Shop"
           items={PIZZA_SHOP_ITEMS}
           userBalance={money.balance}
           bankBalance={money.bankBalance}
           onPurchase={handleShopPurchase}
           onCancel={closeDoor}
+          shopType="PIZZA"
+        />
+      )}
+
+      {/* BEACH POPUP */}
+      {activeDoorId === "DOOR_BEACH" && (
+        <BeachPopup
+          onClose={closeDoor}
+        />
+      )}
+
+      {/* LIBRARY POPUP */}
+      {showLibraryMenu && (
+        <LibraryPopup
+          onClose={() => {
+            setShowLibraryMenu(false);
+            closeDoor(); // Automatically exit the building when closing library
+          }}
         />
       )}
 
@@ -1204,7 +1293,7 @@ const ensureMoneyState = (moneyState?: MoneyState): MoneyState => {
 
     return {
       balance: moneyState.balance ?? oldCash ?? 25,
-      bankBalance: moneyState.bankBalance ?? ((oldBank ?? 0) + (oldTfsa ?? 0)),
+      bankBalance: moneyState.bankBalance ?? (oldBank ?? 0) + (oldTfsa ?? 0),
       portfolio: moneyState.portfolio || {
         etf: 0,
         stocks: 0,
@@ -1212,9 +1301,9 @@ const ensureMoneyState = (moneyState?: MoneyState): MoneyState => {
         crypto: 0,
         minerals: 0,
         real_estate: 0,
-        options: 0
+        options: 0,
       },
-      marketTrends: moneyState.marketTrends || {} as any,
+      marketTrends: moneyState.marketTrends || ({} as any),
       goal: moneyState.goal,
       history: moneyState.history || [],
       bankHistory: moneyState.bankHistory || [],
@@ -1230,7 +1319,7 @@ const ensureMoneyState = (moneyState?: MoneyState): MoneyState => {
       crypto: 0,
       minerals: 0,
       real_estate: 0,
-      options: 0
+      options: 0,
     },
     marketTrends: {} as any,
     goal: {

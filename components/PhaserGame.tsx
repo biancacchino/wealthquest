@@ -5,11 +5,12 @@ import type { Game } from 'phaser';
 
 interface PhaserGameProps {
   onEncounter: (encounterId: string) => void;
+  onFootstep?: () => void;
   onReady?: (game: Phaser.Game) => void;
   characterId?: string | null;
 }
 
-export const PhaserGame: React.FC<PhaserGameProps> = ({ onEncounter, onReady, characterId }) => {
+export const PhaserGame: React.FC<PhaserGameProps> = ({ onEncounter, onFootstep, onReady, characterId }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const gameRef = useRef<Game | null>(null);
 
@@ -23,7 +24,7 @@ export const PhaserGame: React.FC<PhaserGameProps> = ({ onEncounter, onReady, ch
       if (typeof window === 'undefined') return;
       const { createGame } = await import('../phaser/main');
       if (!isMounted || !containerRef.current) return;
-      const game = createGame(containerRef.current, { onEncounter, characterId });
+      const game = createGame(containerRef.current, { onEncounter, onFootstep, characterId });
       gameRef.current = game;
 
       if (onReady) {
@@ -40,7 +41,7 @@ export const PhaserGame: React.FC<PhaserGameProps> = ({ onEncounter, onReady, ch
         gameRef.current = null;
       }
     };
-  }, [onEncounter, onReady, characterId]);
+  }, [onEncounter, onFootstep, onReady, characterId]);
 
   return (
     <div className="flex items-center justify-center">
