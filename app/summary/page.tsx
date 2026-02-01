@@ -170,179 +170,315 @@ function SummaryContent() {
 
   if (!gameState || !summary) {
     return (
-      <div style={{
-        minHeight: "100vh",
-        backgroundColor: "#1a1a2e",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "'Press Start 2P', monospace",
-        color: "#7ab8d8"
-      }}>
-        <p>Loading...</p>
+      <div className="flex items-center justify-center min-h-screen p-4" style={{ backgroundColor: '#7eb8d8' }}>
+        <div 
+          className="w-full max-w-lg p-2 my-auto"
+          style={{ 
+            backgroundColor: '#9ccce8',
+            border: '4px solid #5a98b8',
+            borderRadius: '8px',
+            boxShadow: 'inset 2px 2px 0 #b8e0f0, inset -2px -2px 0 #4888a8'
+          }}
+        >
+          <div 
+            className="flex items-center justify-center px-3 py-2 mb-2"
+            style={{ backgroundColor: '#5a98b8', borderRadius: '4px' }}
+          >
+            <span className="text-white font-bold text-sm tracking-wide" style={{ fontFamily: "'Press Start 2P', monospace" }}>Loading...</span>
+          </div>
+          <div 
+            className="p-6 flex justify-center"
+            style={{ 
+              backgroundColor: '#fffef8',
+              border: '4px solid #c8d8e8',
+              borderRadius: '4px',
+              boxShadow: 'inset 2px 2px 0 #fff, inset -2px -2px 0 #b8c8d8'
+            }}
+          >
+            <div className="flex gap-2">
+              {[0, 1, 2].map((i) => (
+                <div 
+                  key={i}
+                  className="w-2 h-2"
+                  style={{ 
+                    backgroundColor: '#5a98b8',
+                    animation: `pixelBlink 1s ease-in-out ${i * 0.2}s infinite`
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+        <style>{`
+          @keyframes pixelBlink {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+          }
+        `}</style>
       </div>
     );
   }
 
-  const headerBg = completed ? "#22c55e" : gaveUp ? "#64748b" : "#5a98b8";
-  const headerBorder = completed ? "#16a34a" : gaveUp ? "#475569" : "#3a7a98";
+  const trophyEmoji = completed ? "🏆" : gaveUp ? "📊" : "⭐";
+  const titleText = completed ? "GOAL ACHIEVED!" : gaveUp ? "RUN ENDED" : "SUMMARY";
+  const subtitleText = completed 
+    ? `You got your ${gameState.money.goal.label}!`
+    : gaveUp 
+      ? "Every experience is a lesson"
+      : `Progress toward ${gameState.money.goal.label}`;
 
-  const renderStatBox = (label: string, value: string | number, emoji: string) => (
-    <div style={{
-      backgroundColor: "#2a2a4a",
-      border: "3px solid #5a98b8",
-      borderRadius: "4px",
-      padding: "12px",
-      textAlign: "center",
-      boxShadow: "inset 1px 1px 0 #3a3a6a, inset -1px -1px 0 #1a1a3a, 3px 3px 0 rgba(0,0,0,0.3)"
-    }}>
-      <div style={{ fontSize: "20px", marginBottom: "4px" }}>{emoji}</div>
-      <div style={{ fontSize: "14px", color: "#4ade80", marginBottom: "4px" }}>{value}</div>
-      <div style={{ fontSize: "8px", color: "#7ab8d8" }}>{label}</div>
+  const renderStatTile = (label: string, value: string | number, emoji: string) => (
+    <div 
+      style={{
+        backgroundColor: '#d8ecf8',
+        border: '3px solid #a0b8c8',
+        borderRadius: '4px',
+        padding: '12px 8px',
+        textAlign: 'center',
+        boxShadow: 'inset 2px 2px 0 #fff, inset -2px -2px 0 #90a8b8',
+        cursor: 'pointer',
+        transition: 'transform 0.1s ease'
+      }}
+      onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+      onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+    >
+      <div style={{ fontSize: '18px', marginBottom: '4px' }}>{emoji}</div>
+      <div style={{ 
+        fontSize: '12px', 
+        color: '#3a7a98', 
+        marginBottom: '2px',
+        fontFamily: "'Press Start 2P', monospace"
+      }}>{value}</div>
+      <div style={{ 
+        fontSize: '7px', 
+        color: '#5a98b8',
+        fontFamily: "'Press Start 2P', monospace"
+      }}>{label}</div>
     </div>
   );
 
-  const renderProgressBar = (value: number, label: string) => (
-    <div style={{ marginBottom: "16px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-        <span style={{ fontSize: "9px", color: "#d1d5db" }}>{label}</span>
-        <span style={{ fontSize: "9px", color: value >= 70 ? "#4ade80" : value >= 40 ? "#fbbf24" : "#f87171" }}>{value}%</span>
-      </div>
-      <div style={{
-        height: "12px",
-        backgroundColor: "#1a1a2e",
-        border: "2px solid #3a7a98",
-        borderRadius: "2px",
-        overflow: "hidden"
+  const renderProgressBar = (value: number, label: string, emoji: string) => (
+    <div style={{ marginBottom: '16px' }}>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '8px' 
       }}>
-        <div style={{
-          width: `${value}%`,
-          height: "100%",
-          backgroundColor: value >= 70 ? "#4ade80" : value >= 40 ? "#fbbf24" : "#f87171",
-          transition: "width 0.5s ease",
-          boxShadow: "inset 0 -2px 0 rgba(0,0,0,0.2)"
-        }} />
+        <span style={{ 
+          fontSize: '9px', 
+          color: '#5a7888',
+          fontFamily: "'Press Start 2P', monospace"
+        }}>{emoji} {label}</span>
+        <span style={{ 
+          fontSize: '9px', 
+          color: value >= 70 ? '#22c55e' : value >= 40 ? '#f59e0b' : '#ef4444',
+          fontFamily: "'Press Start 2P', monospace"
+        }}>{value}%</span>
       </div>
-      <div style={{ fontSize: "7px", color: "#6b7280", marginTop: "4px", fontStyle: "italic" }}>
+      <div 
+        style={{ 
+          height: '20px',
+          backgroundColor: '#d8e8f0',
+          border: '3px solid #a0b8c8',
+          borderRadius: '2px',
+          boxShadow: 'inset 1px 1px 0 #c0d0d8',
+          overflow: 'hidden'
+        }}
+      >
+        <div 
+          style={{ 
+            width: `${value}%`,
+            height: '100%',
+            backgroundColor: value >= 70 ? '#4ade80' : value >= 40 ? '#fbbf24' : '#f87171',
+            boxShadow: value >= 70 
+              ? 'inset 0 2px 0 #6ee7a0, inset 0 -2px 0 #22c55e'
+              : value >= 40 
+                ? 'inset 0 2px 0 #fcd34d, inset 0 -2px 0 #d97706'
+                : 'inset 0 2px 0 #fca5a5, inset 0 -2px 0 #dc2626',
+            transition: 'width 0.5s ease'
+          }}
+        />
+      </div>
+      <div style={{ 
+        fontSize: '7px', 
+        color: '#7a9aa8', 
+        marginTop: '6px', 
+        fontStyle: 'italic',
+        fontFamily: "'Press Start 2P', monospace"
+      }}>
         {getInsightMessage(label === "Future Prep" ? "futurePreparedness" : "financialMindfulness", value)}
       </div>
     </div>
   );
 
-  const tabStyle = (isActive: boolean) => ({
-    padding: "8px 16px",
-    fontSize: "9px",
-    backgroundColor: isActive ? "#5a98b8" : "#2a2a4a",
-    color: isActive ? "#fff" : "#7ab8d8",
-    border: `2px solid ${isActive ? "#7ab8d8" : "#3a7a98"}`,
-    borderBottom: isActive ? "none" : "2px solid #3a7a98",
-    borderRadius: "4px 4px 0 0",
-    cursor: "pointer",
-    marginRight: "4px",
-    transition: "all 0.2s ease"
+  const tabButtonStyle = (isActive: boolean) => ({
+    padding: '10px 16px',
+    fontSize: '8px',
+    fontFamily: "'Press Start 2P', monospace",
+    backgroundColor: isActive ? '#4888b0' : '#6aa8c8',
+    color: '#fff',
+    border: '3px solid ' + (isActive ? '#3070a0' : '#5a98b8'),
+    borderRadius: '20px',
+    cursor: 'pointer',
+    boxShadow: isActive 
+      ? 'inset 0 2px 0 #68a8d0, inset 0 -2px 0 #285888'
+      : 'inset 0 2px 0 #8ac8e8, inset 0 -2px 0 #4a88a8',
+    transition: 'all 0.2s ease',
+    marginRight: '8px'
   });
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      backgroundColor: "#1a1a2e",
-      backgroundImage: "radial-gradient(#2a2a4a 1px, transparent 1px)",
-      backgroundSize: "20px 20px",
-      padding: "20px",
-      fontFamily: "'Press Start 2P', monospace"
-    }}>
-      <div style={{
-        maxWidth: "600px",
-        margin: "0 auto"
-      }}>
-        {/* Header */}
-        <div style={{
-          backgroundColor: headerBg,
-          border: `4px solid ${headerBorder}`,
-          borderRadius: "8px",
-          padding: "20px",
-          textAlign: "center",
-          marginBottom: "20px",
-          boxShadow: `inset 2px 2px 0 rgba(255,255,255,0.3), inset -2px -2px 0 rgba(0,0,0,0.2), 6px 6px 0 rgba(0,0,0,0.4)`
-        }}>
-          <div style={{ fontSize: "28px", marginBottom: "8px" }}>
-            {completed ? "🎉" : gaveUp ? "📊" : "📈"}
+    <div className="flex items-center justify-center min-h-screen p-4" style={{ backgroundColor: '#7eb8d8' }}>
+      {/* Main Container - LoadingScreen style */}
+      <div 
+        className="w-full max-w-lg p-2 my-auto"
+        style={{ 
+          backgroundColor: '#9ccce8',
+          border: '4px solid #5a98b8',
+          borderRadius: '8px',
+          boxShadow: 'inset 2px 2px 0 #b8e0f0, inset -2px -2px 0 #4888a8'
+        }}
+      >
+        {/* Title Bar */}
+        <div 
+          className="flex items-center justify-between px-3 py-2 mb-2"
+          style={{ backgroundColor: '#5a98b8', borderRadius: '4px' }}
+        >
+          <span 
+            className="text-white font-bold text-sm tracking-wide"
+            style={{ fontFamily: "'Press Start 2P', monospace", fontSize: '10px' }}
+          >
+            {titleText}
+          </span>
+          <span 
+            className="text-white/70"
+            style={{ fontFamily: "'Press Start 2P', monospace", fontSize: '8px' }}
+          >
+            {username}
+          </span>
+        </div>
+
+        {/* Inner Content Panel */}
+        <div 
+          className="p-4"
+          style={{ 
+            backgroundColor: '#fffef8',
+            border: '4px solid #c8d8e8',
+            borderRadius: '4px',
+            boxShadow: 'inset 2px 2px 0 #fff, inset -2px -2px 0 #b8c8d8'
+          }}
+        >
+          {/* Bouncing Trophy Icon */}
+          <div className="flex justify-center mb-4">
+            <div 
+              className="w-16 h-16 animate-bounce"
+              style={{ 
+                backgroundColor: '#d8ecf8',
+                border: '3px solid #a0b8c8',
+                borderRadius: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '28px'
+              }}
+            >
+              {trophyEmoji}
+            </div>
           </div>
-          <h1 style={{
-            fontSize: "16px",
-            color: "#fff",
-            margin: "0 0 8px 0",
-            textShadow: "2px 2px 0 rgba(0,0,0,0.3)"
-          }}>
-            {completed ? "GOAL ACHIEVED!" : gaveUp ? "RUN ENDED" : "SUMMARY"}
-          </h1>
-          <p style={{
-            fontSize: "8px",
-            color: "rgba(255,255,255,0.9)",
-            margin: 0
-          }}>
-            {completed 
-              ? `You got your ${gameState.money.goal.label}!`
-              : gaveUp 
-                ? "Every experience is a lesson"
-                : `Progress toward ${gameState.money.goal.label}`}
-          </p>
-        </div>
 
-        {/* Stats Grid */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "10px",
-          marginBottom: "20px"
-        }}>
-          {renderStatBox("Cash", `$${summary.cash.toFixed(0)}`, "💵")}
-          {renderStatBox("Saved", `$${summary.savings.toFixed(0)}`, "🏦")}
-          {renderStatBox("Bought", summary.purchases, "🛒")}
-          {renderStatBox("Skipped", summary.skips, "⏭️")}
-        </div>
+          {/* Subtitle */}
+          <div className="text-center mb-4">
+            <p 
+              className="text-gray-600 mb-1"
+              style={{ fontFamily: "'Press Start 2P', monospace", fontSize: '8px' }}
+            >
+              {subtitleText}
+            </p>
+          </div>
 
-        {/* Main Content Card */}
-        <div style={{
-          backgroundColor: "#5a98b8",
-          border: "4px solid #3a7a98",
-          borderRadius: "8px",
-          boxShadow: "inset 2px 2px 0 #7ab8d8, inset -2px -2px 0 #2a5a78, 6px 6px 0 rgba(0,0,0,0.4)",
-          overflow: "hidden"
-        }}>
-          {/* Tabs */}
+          {/* Stats Grid - Styled Tiles */}
           <div style={{
-            display: "flex",
-            padding: "12px 12px 0",
-            backgroundColor: "#3a7a98"
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '8px',
+            marginBottom: '16px'
           }}>
-            <button style={tabStyle(activeTab === 'stats')} onClick={() => setActiveTab('stats')}>📊 Stats</button>
-            <button style={tabStyle(activeTab === 'tips')} onClick={() => setActiveTab('tips')}>💡 Tips</button>
-            <button style={tabStyle(activeTab === 'history')} onClick={() => setActiveTab('history')}>📜 History</button>
+            {renderStatTile("Cash", `$${summary.cash.toFixed(0)}`, "💵")}
+            {renderStatTile("Saved", `$${summary.savings.toFixed(0)}`, "🏦")}
+            {renderStatTile("Bought", summary.purchases, "🛒")}
+            {renderStatTile("Skipped", summary.skips, "⏭️")}
           </div>
 
-          {/* Tab Content */}
-          <div style={{ padding: "16px", backgroundColor: "#5a98b8" }}>
+          {/* Tab Navigation - Pill Style */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center',
+            marginBottom: '16px',
+            flexWrap: 'wrap',
+            gap: '4px'
+          }}>
+            <button 
+              style={tabButtonStyle(activeTab === 'stats')} 
+              onClick={() => setActiveTab('stats')}
+            >
+              📊 Stats
+            </button>
+            <button 
+              style={tabButtonStyle(activeTab === 'tips')} 
+              onClick={() => setActiveTab('tips')}
+            >
+              💡 Tips
+            </button>
+            <button 
+              style={tabButtonStyle(activeTab === 'history')} 
+              onClick={() => setActiveTab('history')}
+            >
+              📜 History
+            </button>
+          </div>
+
+          {/* Tab Content Area */}
+          <div 
+            style={{ 
+              backgroundColor: '#e8f4f8',
+              border: '3px solid #c8d8e8',
+              borderRadius: '4px',
+              padding: '16px',
+              boxShadow: 'inset 1px 1px 0 #f0f8fc, inset -1px -1px 0 #b8c8d8',
+              minHeight: '180px'
+            }}
+          >
             {activeTab === 'stats' && (
               <div>
-                <h3 style={{ fontSize: "10px", color: "#fff", marginBottom: "16px", textShadow: "1px 1px 0 rgba(0,0,0,0.3)" }}>
-                  📈 Your Performance
-                </h3>
-                {renderProgressBar(summary.stats.futurePreparedness, "Future Prep")}
-                {renderProgressBar(summary.stats.financialMindfulness, "Mindfulness")}
+                {renderProgressBar(summary.stats.futurePreparedness, "Future Prep", "📈")}
+                {renderProgressBar(summary.stats.financialMindfulness, "Mindfulness", "🧠")}
                 
                 {!completed && (
-                  <div style={{
-                    backgroundColor: "#2a5a78",
-                    border: "2px solid #1a4a68",
-                    borderRadius: "4px",
-                    padding: "12px",
-                    marginTop: "16px"
-                  }}>
-                    <p style={{ fontSize: "8px", color: "#d1d5db", margin: 0 }}>
-                      🎯 Goal: {gameState.money.goal.label} (${gameState.money.goal.cost})
+                  <div 
+                    style={{
+                      backgroundColor: '#d8ecf8',
+                      border: '3px solid #a0b8c8',
+                      borderRadius: '4px',
+                      padding: '12px',
+                      marginTop: '12px',
+                      boxShadow: 'inset 1px 1px 0 #e8f4fc, inset -1px -1px 0 #90a8b8'
+                    }}
+                  >
+                    <p style={{ 
+                      fontSize: '8px', 
+                      color: '#5a7888', 
+                      margin: 0,
+                      fontFamily: "'Press Start 2P', monospace"
+                    }}>
+                      🎯 Goal: {gameState.money.goal.label}
                     </p>
-                    <p style={{ fontSize: "8px", color: "#fbbf24", margin: "8px 0 0 0" }}>
+                    <p style={{ 
+                      fontSize: '8px', 
+                      color: '#f59e0b', 
+                      margin: '8px 0 0 0',
+                      fontFamily: "'Press Start 2P', monospace"
+                    }}>
                       ${Math.max(0, gameState.money.goal.cost - summary.savings).toFixed(2)} more needed!
                     </p>
                   </div>
@@ -354,15 +490,28 @@ function SummaryContent() {
               <div>
                 {/* What You Did Well */}
                 <div style={{
-                  backgroundColor: "rgba(74, 222, 128, 0.2)",
-                  border: "2px solid #4ade80",
-                  borderRadius: "4px",
-                  padding: "12px",
-                  marginBottom: "16px"
+                  backgroundColor: '#dcfce7',
+                  border: '3px solid #86efac',
+                  borderRadius: '4px',
+                  padding: '12px',
+                  marginBottom: '12px',
+                  boxShadow: 'inset 1px 1px 0 #f0fdf4, inset -1px -1px 0 #6ee7a0'
                 }}>
-                  <h4 style={{ fontSize: "9px", color: "#4ade80", margin: "0 0 10px 0" }}>✨ What You Did Well</h4>
+                  <h4 style={{ 
+                    fontSize: '8px', 
+                    color: '#16a34a', 
+                    margin: '0 0 10px 0',
+                    fontFamily: "'Press Start 2P', monospace"
+                  }}>✨ What You Did Well</h4>
                   {summary.positiveFeedback.map((fb, i) => (
-                    <p key={i} style={{ fontSize: "8px", color: "#d1d5db", margin: "6px 0", paddingLeft: "8px", borderLeft: "2px solid #4ade80" }}>
+                    <p key={i} style={{ 
+                      fontSize: '7px', 
+                      color: '#166534', 
+                      margin: '6px 0', 
+                      paddingLeft: '8px', 
+                      borderLeft: '2px solid #4ade80',
+                      fontFamily: "'Press Start 2P', monospace"
+                    }}>
                       {fb}
                     </p>
                   ))}
@@ -370,14 +519,27 @@ function SummaryContent() {
 
                 {/* Room to Grow */}
                 <div style={{
-                  backgroundColor: "rgba(251, 191, 36, 0.2)",
-                  border: "2px solid #fbbf24",
-                  borderRadius: "4px",
-                  padding: "12px"
+                  backgroundColor: '#fef3c7',
+                  border: '3px solid #fcd34d',
+                  borderRadius: '4px',
+                  padding: '12px',
+                  boxShadow: 'inset 1px 1px 0 #fefce8, inset -1px -1px 0 #f59e0b'
                 }}>
-                  <h4 style={{ fontSize: "9px", color: "#fbbf24", margin: "0 0 10px 0" }}>🌱 Room to Grow</h4>
+                  <h4 style={{ 
+                    fontSize: '8px', 
+                    color: '#b45309', 
+                    margin: '0 0 10px 0',
+                    fontFamily: "'Press Start 2P', monospace"
+                  }}>🌱 Room to Grow</h4>
                   {summary.improvementFeedback.map((fb, i) => (
-                    <p key={i} style={{ fontSize: "8px", color: "#d1d5db", margin: "6px 0", paddingLeft: "8px", borderLeft: "2px solid #fbbf24" }}>
+                    <p key={i} style={{ 
+                      fontSize: '7px', 
+                      color: '#92400e', 
+                      margin: '6px 0', 
+                      paddingLeft: '8px', 
+                      borderLeft: '2px solid #fbbf24',
+                      fontFamily: "'Press Start 2P', monospace"
+                    }}>
                       {fb}
                     </p>
                   ))}
@@ -387,29 +549,43 @@ function SummaryContent() {
 
             {activeTab === 'history' && (
               <div>
-                <h3 style={{ fontSize: "10px", color: "#fff", marginBottom: "12px", textShadow: "1px 1px 0 rgba(0,0,0,0.3)" }}>
-                  📜 Recent Decisions
+                <h3 style={{ 
+                  fontSize: '9px', 
+                  color: '#5a7888', 
+                  marginBottom: '12px',
+                  fontFamily: "'Press Start 2P', monospace"
+                }}>
+                  Recent Decisions
                 </h3>
                 {summary.recent.length > 0 ? (
-                  <div style={{ maxHeight: "200px", overflowY: "auto" }}>
+                  <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
                     {summary.recent.map((event, i) => (
                       <div key={event.id} style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        padding: "8px",
-                        backgroundColor: i % 2 === 0 ? "rgba(0,0,0,0.1)" : "transparent",
-                        borderRadius: "2px"
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '8px',
+                        backgroundColor: i % 2 === 0 ? '#d8ecf8' : '#e8f4f8',
+                        borderRadius: '4px',
+                        marginBottom: '4px',
+                        border: '2px solid #c8d8e8'
                       }}>
-                        <span style={{ fontSize: "7px", color: "#d1d5db", flex: 1 }}>
+                        <span style={{ 
+                          fontSize: '6px', 
+                          color: '#5a7888', 
+                          flex: 1,
+                          fontFamily: "'Press Start 2P', monospace"
+                        }}>
                           {event.encounterId.replace(/_/g, ' ')}
                         </span>
                         <span style={{
-                          fontSize: "7px",
-                          padding: "2px 6px",
-                          borderRadius: "2px",
-                          backgroundColor: event.choice === 'buy' ? "#ef4444" : "#22c55e",
-                          color: "#fff"
+                          fontSize: '6px',
+                          padding: '3px 8px',
+                          borderRadius: '10px',
+                          backgroundColor: event.choice === 'buy' ? '#fecaca' : '#bbf7d0',
+                          color: event.choice === 'buy' ? '#b91c1c' : '#15803d',
+                          border: event.choice === 'buy' ? '2px solid #f87171' : '2px solid #4ade80',
+                          fontFamily: "'Press Start 2P', monospace"
                         }}>
                           {event.choice === 'buy' ? `BUY $${event.cost.toFixed(0)}` : 'SKIP'}
                         </span>
@@ -417,58 +593,88 @@ function SummaryContent() {
                     ))}
                   </div>
                 ) : (
-                  <p style={{ fontSize: "8px", color: "#7ab8d8", textAlign: "center" }}>No decisions yet!</p>
+                  <p style={{ 
+                    fontSize: '8px', 
+                    color: '#7a9aa8', 
+                    textAlign: 'center',
+                    fontFamily: "'Press Start 2P', monospace"
+                  }}>No decisions yet!</p>
                 )}
               </div>
             )}
           </div>
+
+          {/* Blinking dots */}
+          <div className="flex justify-center gap-2 mt-4">
+            {[0, 1, 2].map((i) => (
+              <div 
+                key={i}
+                className="w-2 h-2"
+                style={{ 
+                  backgroundColor: '#5a98b8',
+                  animation: `pixelBlink 1s ease-in-out ${i * 0.2}s infinite`
+                }}
+              />
+            ))}
+          </div>
         </div>
 
-        {/* Play Again Button */}
-        <div style={{ marginTop: "20px", textAlign: "center" }}>
-          <p style={{
-            fontSize: "8px",
-            color: "#7ab8d8",
-            marginBottom: "12px",
-            fontStyle: "italic"
-          }}>
-            {completed 
-              ? "Ready to try for a bigger goal?"
-              : "Different choices, different outcomes!"}
-          </p>
-          <button
-            onClick={handlePlayAgain}
-            style={{
-              padding: "14px 32px",
-              fontSize: "12px",
+        {/* Play Again Button - Tip Box Style */}
+        <div 
+          className="mt-2 py-3 px-4 text-center cursor-pointer"
+          style={{ 
+            backgroundColor: '#4ade80',
+            borderRadius: '20px',
+            border: '3px solid #22c55e',
+            boxShadow: 'inset 0 2px 0 #6ee7a0, inset 0 -2px 0 #16a34a',
+            transition: 'transform 0.1s ease'
+          }}
+          onClick={handlePlayAgain}
+          onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+          onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
+          <p 
+            className="font-bold"
+            style={{ 
+              color: '#166534',
               fontFamily: "'Press Start 2P', monospace",
-              backgroundColor: "#4ade80",
-              color: "#1a1a2e",
-              border: "4px solid #22c55e",
-              borderRadius: "4px",
-              cursor: "pointer",
-              boxShadow: "inset 2px 2px 0 #6ee7a0, inset -2px -2px 0 #16a34a, 4px 4px 0 rgba(0,0,0,0.4)",
-              transition: "transform 0.1s ease"
+              fontSize: '10px',
+              margin: 0
             }}
-            onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.05)"}
-            onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}
           >
             🎮 PLAY AGAIN
-          </button>
+          </p>
         </div>
 
-        {/* Footer */}
-        <div style={{
-          textAlign: "center",
-          marginTop: "24px",
-          padding: "12px",
-          borderTop: "2px dashed #3a7a98"
-        }}>
-          <p style={{ fontSize: "7px", color: "#5a98b8", margin: 0 }}>
-            Thanks for playing, {username}! 💙
+        {/* Footer Tip Box */}
+        <div 
+          className="mt-2 py-3 px-4 text-center"
+          style={{ 
+            backgroundColor: '#4888b0',
+            borderRadius: '20px',
+            border: '3px solid #3070a0',
+            boxShadow: 'inset 0 2px 0 #68a8d0, inset 0 -2px 0 #285888'
+          }}
+        >
+          <p 
+            className="text-white font-bold"
+            style={{ 
+              fontFamily: "'Press Start 2P', monospace",
+              fontSize: '7px',
+              margin: 0
+            }}
+          >
+            💙 Thanks for playing, {username}!
           </p>
         </div>
       </div>
+
+      <style>{`
+        @keyframes pixelBlink {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }
@@ -476,16 +682,51 @@ function SummaryContent() {
 export default function SummaryPage() {
   return (
     <Suspense fallback={
-      <div style={{
-        minHeight: "100vh",
-        backgroundColor: "#1a1a2e",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "'Press Start 2P', monospace",
-        color: "#7ab8d8"
-      }}>
-        <p>Loading summary...</p>
+      <div className="flex items-center justify-center min-h-screen p-4" style={{ backgroundColor: '#7eb8d8' }}>
+        <div 
+          className="w-full max-w-lg p-2 my-auto"
+          style={{ 
+            backgroundColor: '#9ccce8',
+            border: '4px solid #5a98b8',
+            borderRadius: '8px',
+            boxShadow: 'inset 2px 2px 0 #b8e0f0, inset -2px -2px 0 #4888a8'
+          }}
+        >
+          <div 
+            className="flex items-center justify-center px-3 py-2 mb-2"
+            style={{ backgroundColor: '#5a98b8', borderRadius: '4px' }}
+          >
+            <span className="text-white font-bold text-sm tracking-wide" style={{ fontFamily: "'Press Start 2P', monospace" }}>Loading...</span>
+          </div>
+          <div 
+            className="p-6 flex justify-center"
+            style={{ 
+              backgroundColor: '#fffef8',
+              border: '4px solid #c8d8e8',
+              borderRadius: '4px',
+              boxShadow: 'inset 2px 2px 0 #fff, inset -2px -2px 0 #b8c8d8'
+            }}
+          >
+            <div className="flex gap-2">
+              {[0, 1, 2].map((i) => (
+                <div 
+                  key={i}
+                  className="w-2 h-2"
+                  style={{ 
+                    backgroundColor: '#5a98b8',
+                    animation: `pixelBlink 1s ease-in-out ${i * 0.2}s infinite`
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+        <style>{`
+          @keyframes pixelBlink {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+          }
+        `}</style>
       </div>
     }>
       <SummaryContent />
