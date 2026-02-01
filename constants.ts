@@ -89,3 +89,12 @@ export const MONEY_GOALS = [
 ] as const;
 
 export type MoneyGoalId = typeof MONEY_GOALS[number]['id'];
+
+// Coffee shop items
+export const COFFEE_SHOP_ITEMS = [
+  { id: "coffee", name: "Coffee", price: 2.0, emoji: "☕️" },
+  { id: "latte", name: "Latte", price: 3.0, emoji: "🥛" },
+  { id: "iced_coffee", name: "Iced Coffee", price: 3.0, emoji: "🧊" },
+  { id: "donut", name: "Donut", price: 1.0, emoji: "🍩" },
+  { id: "muffin", name: "Muffin", price: 2.0, emoji: "🧁" },
+];

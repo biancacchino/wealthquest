@@ -16,15 +16,17 @@ import { ENCOUNTERS } from "../phaser/data/encounters";
 import { MoneyHUD } from "./MoneyHUD";
 import { MONEY_GOALS } from "../constants";
 import { ShopPopup } from "./ShopPopup";
-import {
-  BusIcon,
-  MovieIcon,
-  PizzaIcon,
-  HomeIcon,
-  CoffeeIcon,
-  BankIcon,
-  ArcadeIcon,
-  MallIcon,
+import { CoffeePopup } from "./CoffeePopup";
+import { COFFEE_SHOP_ITEMS } from "../constants";
+import { 
+  BusIcon, 
+  MovieIcon, 
+  PizzaIcon, 
+  HomeIcon, 
+  CoffeeIcon, 
+  BankIcon, 
+  ArcadeIcon, 
+  MallIcon 
 } from "./PixelIcons";
 
 // Mapping of Door IDs to display names
@@ -278,23 +280,14 @@ export const Overworld: React.FC<OverworldProps> = ({
     if (activeDoorId) {
       notifyDecision(activeDoorId, "yes");
     }
-    // Handle Work building - earn random $15-$20 with cooldown
-    if (activeDoorId === 'DOOR_WORK') {
-      const now = Date.now();
-      
-      // Check if still on cooldown
-      if (now < workCooldownEnd) {
-        const secondsLeft = Math.ceil((workCooldownEnd - now) / 1000);
-        alert(`You need to rest! Come back in ${secondsLeft} seconds.`);
-        closeDoor();
-        return;
-      }
-      
-      // Earn money and start 20 second cooldown
-      const earned = Math.floor(Math.random() * 6) + 15; // 15-20 inclusive
-      earnMoney(earned, 'work');
-      setWorkEarnings(earned);
-      setWorkCooldownEnd(now + 20000);
+    // For market door, show shop popup only after confirmation
+    if (activeDoorId === 'DOOR_MARKET') {
+      setShowShop(true);
+      return;
+    }
+    // For coffee shop door, show coffee popup only after confirmation
+    if (activeDoorId === 'DOOR_COFFEE') {
+      setShowShop(true);
       return;
     }
     
@@ -304,7 +297,6 @@ export const Overworld: React.FC<OverworldProps> = ({
         // Do not close door yet, shop is an overlay
         return;
     }
-
     // TODO: Navigate to building Scene or Page
     console.log(`Entering ${DOOR_MAPPING[activeDoorId || ""]}`);
     alert(`Entered ${DOOR_MAPPING[activeDoorId || ""]}! (Placeholder)`);
@@ -654,6 +646,18 @@ export const Overworld: React.FC<OverworldProps> = ({
           userBalance={money.balance}
           onPurchase={handleShopPurchase}
           onCancel={closeDoor}
+        />
+      )}
+
+      {/* COFFEE POPUP FOR COFFEE SHOP DOOR */}
+      {showShop && activeDoorId === "DOOR_COFFEE" && (
+        <CoffeePopup
+          title="Coffee Shop"
+          items={COFFEE_SHOP_ITEMS}
+          userBalance={money.balance}
+          onPurchase={handleShopPurchase}
+          onCancel={closeDoor}
+          imagePath={"/assets/ui/coffee-bar.png"}
         />
       )}
 
