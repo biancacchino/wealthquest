@@ -19,6 +19,7 @@ export class World extends Phaser.Scene {
     this.gameState = new GameState();
     this.isMovementLocked = false;
     this.doorCooldowns = new Map();
+    this.ignoreTriggersUntil = 0;
   }
 
   preload() {
@@ -277,10 +278,19 @@ export class World extends Phaser.Scene {
   handleDoorTrigger(doorName) {
       const now = this.time.now;
       
+      // Check global trigger immunity (e.g. after teleporting)
+      if (this.ignoreTriggersUntil > now) {
+          return;
+      }
+
       // Check specific door cooldown
       if (this.doorCooldowns.has(doorName) && this.doorCooldowns.get(doorName) > now) {
           return;
       }
+      
+      // Prevent spamming: Set a temporary cooldown immediately (e.g. 5s)
+      // This gives the user time to interact with the UI without re-triggering
+      this.doorCooldowns.set(doorName, now + 5000);
       
       this.lastTriggerTime = now;
 
@@ -481,8 +491,11 @@ export class World extends Phaser.Scene {
           Math.floor(y / tileSize)
       );
 
-      // Reset any triggers/cooldowns related to position if needed
+      // Reset any triggers/cooldowns related to position
       this.currentOverlappingDoor = null;
+      
+      // Ignore triggers for 2 seconds to prevent immediate re-activation
+      this.ignoreTriggersUntil = this.time.now + 2000;
   }
 
   markEncounterComplete(encounterId) {
@@ -497,13 +510,13 @@ export class World extends Phaser.Scene {
   handleDoorDecision(doorName, decision) {
     const now = this.time.now;
     if (decision === 'yes') {
-        // If yes, long cooldown (15 seconds)
-        this.doorCooldowns.set(doorName, now + 15000);
-        console.log(`Door ${doorName} accepted. Cooldown: 15s`);
+        // If yes, long cooldown (30 seconds)
+        this.doorCooldowns.set(doorName, now + 30000);
+        console.log(`Door ${doorName} accepted. Cooldown: 30s`);
     } else {
-        // If no, short cooldown (3 seconds)
-        this.doorCooldowns.set(doorName, now + 3000);
-        console.log(`Door ${doorName} declined. Cooldown: 3s`);
+        // If no, medium cooldown (8 seconds) to allow player to walk away
+        this.doorCooldowns.set(doorName, now + 8000);
+        console.log(`Door ${doorName} declined. Cooldown: 8s`);
     }
   }
 }
