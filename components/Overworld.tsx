@@ -25,6 +25,7 @@ import { ShopPopup } from "./ShopPopup";
 import { BankPopup } from "./BankPopup";
 import { CoffeePopup } from "./CoffeePopup";
 import { LibraryPopup } from "./LibraryPopup";
+import { ApartmentRestPopup } from "./ApartmentRestPopup";
 import { COFFEE_SHOP_ITEMS } from "../constants";
 import {
   BusIcon,
@@ -228,6 +229,7 @@ export const Overworld: React.FC<OverworldProps> = ({
   const [showShop, setShowShop] = useState(false);
   const [showBank, setShowBank] = useState(false);
   const [showLibraryMenu, setShowLibraryMenu] = useState(false);
+  const [showApartmentRest, setShowApartmentRest] = useState(false);
   const [modalStep, setModalStep] = useState<"choice" | "preview" | "result">(
     "choice",
   );
@@ -318,6 +320,7 @@ export const Overworld: React.FC<OverworldProps> = ({
     setActiveDoorId(null);
     setShowShop(false);
     setShowLibraryMenu(false);
+    setShowApartmentRest(false);
     setMovementLocked(false);
 
     if (!skipPushback) {
@@ -336,6 +339,11 @@ export const Overworld: React.FC<OverworldProps> = ({
 
     if (activeDoorId === "DOOR_LIBRARY") {
       setShowLibraryMenu(true);
+      return;
+    }
+
+    if (activeDoorId === "DOOR_APARTMENT") {
+      setShowApartmentRest(true);
       return;
     }
 
@@ -609,7 +617,8 @@ export const Overworld: React.FC<OverworldProps> = ({
 
       {activeDoorId &&
         !activeDoorId.includes("DOOR_BUS") &&
-        !showLibraryMenu && (
+        !showLibraryMenu &&
+        !showApartmentRest && (
           <div className="absolute inset-0 z-20 bg-black/70 flex items-center justify-center p-4">
             <RetroBox
               title={DOOR_MAPPING[activeDoorId] || activeDoorId}
@@ -645,7 +654,8 @@ export const Overworld: React.FC<OverworldProps> = ({
       {activeDoorId &&
         !activeDoorId.includes("DOOR_BUS") &&
         !showShop &&
-        !showLibraryMenu && (
+        !showLibraryMenu &&
+        !showApartmentRest && (
           <div className="absolute inset-0 z-20 bg-black/70 flex items-center justify-center p-4">
             <RetroBox
               title={DOOR_MAPPING[activeDoorId] || activeDoorId}
@@ -824,6 +834,16 @@ export const Overworld: React.FC<OverworldProps> = ({
         <LibraryPopup
           onClose={() => {
             setShowLibraryMenu(false);
+            closeDoor();
+          }}
+        />
+      )}
+
+      {showApartmentRest && activeDoorId === "DOOR_APARTMENT" && (
+        <ApartmentRestPopup
+          money={money}
+          onClose={() => {
+            setShowApartmentRest(false);
             closeDoor();
           }}
         />

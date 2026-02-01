@@ -64,12 +64,12 @@ export class World extends Phaser.Scene {
     this.createCollisionZones();
 
     // Create player at starting position (User requested: 310, 225)
-    this.player = new Player(this, 310, 225);
+    this.player = new Player(this, 310, 255);
 
     // Sync GameState to this new position
     this.gameState.updatePlayerPosition(
         Math.floor(310 / tileSize), 
-        Math.floor(225 / tileSize)
+        Math.floor(255 / tileSize)
     );
 
     // --- ADD COLLISIONS ---
@@ -163,7 +163,7 @@ export class World extends Phaser.Scene {
     // ---------------------------------------------------------
 
     // --- 1. Apartment Area ---
-    createDoor(312, 218, 40, 60, 'DOOR_APARTMENT');
+    createDoor(300, 180, 40, 60, 'DOOR_APARTMENT');
     createDoor(515, 295, 15, 30, 'DOOR_BUS_APARTMENT', 0x800080);
     
     // Apartment Walls
