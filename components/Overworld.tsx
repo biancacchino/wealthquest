@@ -477,6 +477,35 @@ export const Overworld: React.FC<OverworldProps> = ({
   const handleBusTravel = (destination: (typeof BUS_STOPS)[0]) => {
     if (!activeDoorId) return;
 
+    const BUS_FARE = 2.00;
+
+    if (money.balance < BUS_FARE) {
+      alert(`The bus costs $${BUS_FARE.toFixed(2)}. You don't have enough money!`);
+      return;
+    }
+
+    // Deduct fare and log it
+    const newBalance = Math.round((money.balance - BUS_FARE) * 100) / 100;
+    
+    const newBusEvent: ChoiceEvent = {
+      id: createEventId(),
+      encounterId: "bus_ride",
+      choice: "buy",
+      cost: BUS_FARE,
+      category: "need", // Transport is a need
+      deltas: {
+        balanceAfter: newBalance,
+        notes: [`Took the bus to ${destination.name}`],
+      },
+    };
+
+    const updatedMoney: MoneyState = {
+      ...money,
+      balance: newBalance,
+      history: [...money.history, newBusEvent],
+    };
+    saveMoneyState(updatedMoney);
+
     // 1. Set traveling state
     setIsTraveling(true);
 
