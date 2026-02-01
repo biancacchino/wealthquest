@@ -16,6 +16,15 @@ import { ENCOUNTERS } from "../phaser/data/encounters";
 import { MoneyHUD } from "./MoneyHUD";
 import { MONEY_GOALS } from "../constants";
 import { ShopPopup } from "./ShopPopup";
+import {
+  BusIcon,
+  MovieIcon,
+  PizzaIcon,
+  HomeIcon,
+  CoffeeIcon,
+  BankIcon,
+  ArcadeIcon,
+  MallIcon,
 import { BankPopup } from "./BankPopup";
 import { CoffeePopup } from "./CoffeePopup";
 import { COFFEE_SHOP_ITEMS } from "../constants";
@@ -292,6 +301,12 @@ export const Overworld: React.FC<OverworldProps> = ({
       notifyDecision(activeDoorId, "yes");
     }
 
+    // Check if it's a shop door
+    if (activeDoorId === "DOOR_MARKET" || activeDoorId === "DOOR_MALL") {
+      setShowShop(true);
+      // Do not close door yet, shop is an overlay
+      return;
+    }
     // Handle Work building - earn random $15-$20 with cooldown
     if (activeDoorId === 'DOOR_WORK') {
       const now = Date.now();
