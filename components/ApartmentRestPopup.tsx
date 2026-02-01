@@ -8,6 +8,7 @@ interface ApartmentRestPopupProps {
   onClose: () => void;
 }
 
+//hello
 const getRestMessage = (money: MoneyState) => {
   const buyCount = money.history.filter(
     (event) => event.choice === "buy",
