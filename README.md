@@ -18,11 +18,6 @@ Wealth Quest is a story-driven financial literacy game that blends a pixel-art o
 * **📚 Learning Library**: Bite-sized tips on money fundamentals
 * **📊 End-of-Run Summary**: Review stats and feedback
 
-## 📸 Screenshots
-
-<img width="500" height="500" alt="Wealth Quest map" src="public/assets/maps/world-map.png" />
-<img width="500" height="500" alt="Wealth Quest character" src="public/assets/sprites/robin-sprite.png" />
-
 ## 🎯 The Problem We Solved
 
 Money decisions are everywhere, but financial concepts can feel abstract and intimidating. Wealth Quest turns real-world scenarios into approachable, game-like choices so players can build confidence and awareness through play.
